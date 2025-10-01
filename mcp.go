@@ -144,4 +144,3 @@ func StartMCPServer(ctx context.Context) error {
 	transport := &mcp.StdioTransport{}
 	return server.Run(ctx, transport)
 }
-
