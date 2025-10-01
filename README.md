@@ -93,6 +93,34 @@ wtm remove feature-auth --force
 wtm version
 ```
 
+### MCP Server (for AI integration)
+
+Start an MCP (Model Context Protocol) server to enable AI tools like Claude Code to manage worktrees:
+
+```bash
+wtm mcp
+```
+
+The MCP server exposes four tools over stdio:
+
+- `wtm_add`: Create a new worktree
+- `wtm_list`: List all worktrees
+- `wtm_show`: Show worktree details
+- `wtm_remove`: Remove a worktree
+
+**Example MCP configuration for Claude Code:**
+
+```json
+{
+  "mcpServers": {
+    "wtm": {
+      "command": "/path/to/wtm",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
 ## Shell Integration
 
 ### Quick navigation

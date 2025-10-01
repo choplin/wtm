@@ -41,7 +41,7 @@ func setupTestRepo(t *testing.T) string {
 
 	// Create initial commit
 	testFile := filepath.Join(tmpDir, "README.md")
-	if err := os.WriteFile(testFile, []byte("# Test Repo\n"), 0644); err != nil {
+	if err := os.WriteFile(testFile, []byte("# Test Repo\n"), 0o644); err != nil {
 		os.RemoveAll(tmpDir)
 		t.Fatalf("Failed to create test file: %v", err)
 	}
@@ -327,3 +327,4 @@ func TestGetWorktrees(t *testing.T) {
 		}
 	})
 }
+

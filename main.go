@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -142,7 +143,9 @@ func handleRemove(args []string) {
 }
 
 func handleMCP() {
-	fmt.Fprintln(os.Stderr, "MCP server not yet implemented")
-	os.Exit(1)
+	ctx := context.Background()
+	if err := StartMCPServer(ctx); err != nil {
+		fmt.Fprintf(os.Stderr, "Error starting MCP server: %v\n", err)
+		os.Exit(1)
+	}
 }
-
