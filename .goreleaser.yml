@@ -44,7 +44,7 @@ brews:
   - name: wtm
     repository:
       owner: choplin
-      name: homebrew-wtm
+      name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     homepage: https://github.com/choplin/wtm
     description: "Minimal git worktree management tool"
