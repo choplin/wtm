@@ -223,6 +223,16 @@ Unlike other tools, `wtm` separates worktree names from branch names. This allow
 - Complex branch names (e.g., `feature/long/nested/name`)
 - Multiple worktrees for the same branch
 
+### Non-Goals
+
+`wtm` intentionally does NOT include:
+
+- Session/task management
+- Configuration files
+- Metadata storage
+- Hooks or plugins
+- TUI interface
+
 ## Comparison with Alternatives
 
 ### vs. `git worktree` (native)
