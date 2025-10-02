@@ -13,13 +13,19 @@ Managing multiple git worktrees manually is tedious. Native `git worktree` comma
 
 ## Installation
 
-### Build from source
+### Homebrew (macOS/Linux)
+
+```bash
+brew install choplin/tap/wtm
+```
+
+### Go install
 
 ```bash
 go install github.com/choplin/wtm@latest
 ```
 
-Or clone and build:
+### Build from source
 
 ```bash
 git clone https://github.com/choplin/wtm.git
