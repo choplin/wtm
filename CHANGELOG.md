@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-10-06
+
 ### Added
 
 - In-memory MCP server end-to-end test verifying tool registration and schema metadata.
@@ -30,3 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MIT License
 
 [0.1.0]: https://github.com/choplin/wtm/releases/tag/v0.1.0
+
+[Unreleased]: https://github.com/choplin/wtm/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/choplin/wtm/compare/v0.1.0...v0.1.1
