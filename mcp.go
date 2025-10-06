@@ -10,40 +10,40 @@ import (
 // Tool input/output structures
 
 type AddWorktreeInput struct {
-	Name     string `json:"name" jsonschema:"required,description=Name of the worktree (used as directory name)"`
-	Branch   string `json:"branch,omitempty" jsonschema:"description=Create new branch with this name (default: same as worktree name)"`
-	Checkout string `json:"checkout,omitempty" jsonschema:"description=Use existing branch with this name"`
-	Base     string `json:"base,omitempty" jsonschema:"description=Base branch for new branch (default: current HEAD)"`
+	Name     string `json:"name" jsonschema:"name of the worktree (used as directory name)"`
+	Branch   string `json:"branch,omitempty" jsonschema:"create new branch with this name (default: same as worktree name)"`
+	Checkout string `json:"checkout,omitempty" jsonschema:"use existing branch with this name"`
+	Base     string `json:"base,omitempty" jsonschema:"base branch for new branch (default: current HEAD)"`
 }
 
 type AddWorktreeOutput struct {
-	Name   string `json:"name" jsonschema:"description=Created worktree name"`
-	Branch string `json:"branch" jsonschema:"description=Branch name"`
-	Path   string `json:"path" jsonschema:"description=Absolute path to the worktree"`
+	Name   string `json:"name" jsonschema:"created worktree name"`
+	Branch string `json:"branch" jsonschema:"branch name"`
+	Path   string `json:"path" jsonschema:"absolute path to the worktree"`
 }
 
 type ListWorktreesInput struct{}
 
 type ListWorktreesOutput struct {
-	Worktrees []Worktree `json:"worktrees" jsonschema:"description=List of all worktrees"`
+	Worktrees []Worktree `json:"worktrees" jsonschema:"list of all worktrees"`
 }
 
 type ShowWorktreeInput struct {
-	Name string `json:"name" jsonschema:"required,description=Name of the worktree to show"`
+	Name string `json:"name" jsonschema:"name of the worktree to show"`
 }
 
 type ShowWorktreeOutput struct {
-	Worktree Worktree `json:"worktree" jsonschema:"description=Worktree details"`
+	Worktree Worktree `json:"worktree" jsonschema:"worktree details"`
 }
 
 type RemoveWorktreeInput struct {
-	Name  string `json:"name" jsonschema:"required,description=Name of the worktree to remove"`
-	Force bool   `json:"force,omitempty" jsonschema:"description=Skip confirmation prompt"`
+	Name  string `json:"name" jsonschema:"name of the worktree to remove"`
+	Force bool   `json:"force,omitempty" jsonschema:"skip confirmation prompt"`
 }
 
 type RemoveWorktreeOutput struct {
-	Removed bool   `json:"removed" jsonschema:"description=Whether the worktree was removed"`
-	Message string `json:"message" jsonschema:"description=Result message"`
+	Removed bool   `json:"removed" jsonschema:"whether the worktree was removed"`
+	Message string `json:"message" jsonschema:"result message"`
 }
 
 // Tool handlers
@@ -114,20 +114,27 @@ func handleRemoveWorktree(ctx context.Context, req *mcp.CallToolRequest, input R
 
 // StartMCPServer starts the MCP server over stdio transport
 func StartMCPServer(ctx context.Context) error {
+	server := newMCPServer()
+
+	// Run server over stdio transport
+	transport := &mcp.StdioTransport{}
+	return server.Run(ctx, transport)
+}
+
+func newMCPServer() *mcp.Server {
 	server := mcp.NewServer(&mcp.Implementation{
 		Name:    "wtm",
 		Version: version,
 	}, nil)
 
-	// Register tools
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "wtm_add",
-		Description: "Create a new git worktree with specified name. The worktree name is used as the directory name and identifier, independent from the branch name.",
+		Description: "Create a new git worktree. Worktree name is used as directory identifier, independent from branch name.",
 	}, handleAddWorktree)
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "wtm_list",
-		Description: "List all git worktrees in the current repository.",
+		Description: "List all git worktrees in the current repository with their details.",
 	}, handleListWorktrees)
 
 	mcp.AddTool(server, &mcp.Tool{
@@ -137,10 +144,8 @@ func StartMCPServer(ctx context.Context) error {
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "wtm_remove",
-		Description: "Remove a git worktree by name. Optionally skip confirmation prompt with force flag.",
+		Description: "Remove a git worktree by name. Use force flag to skip confirmation.",
 	}, handleRemoveWorktree)
 
-	// Run server over stdio transport
-	transport := &mcp.StdioTransport{}
-	return server.Run(ctx, transport)
+	return server
 }
