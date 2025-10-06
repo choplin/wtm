@@ -20,6 +20,26 @@ type Worktree struct {
 	Created time.Time `json:"created"`
 }
 
+// BranchDeleteMode indicates how to handle the associated branch once the worktree is removed
+type BranchDeleteMode int
+
+const (
+	// BranchDeleteNone leaves the branch untouched
+	BranchDeleteNone BranchDeleteMode = iota
+	// BranchDeleteSafe deletes the branch via `git branch -d`, failing if it is not fully merged
+	BranchDeleteSafe
+	// BranchDeleteForce deletes the branch via `git branch -D`, even if it is not merged
+	BranchDeleteForce
+)
+
+// RemoveOptions groups configuration for removing a worktree
+type RemoveOptions struct {
+	// Force skips the interactive confirmation before running `git worktree remove --force`
+	Force bool
+	// BranchDelete controls whether and how to delete the associated branch after removing the worktree
+	BranchDelete BranchDeleteMode
+}
+
 // runGitCommand executes a git command and returns the output
 func runGitCommand(args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
@@ -163,8 +183,8 @@ func ShowWorktree(name, format, field string) error {
 	return nil
 }
 
-// RemoveWorktree removes a worktree
-func RemoveWorktree(name string, force bool) error {
+// RemoveWorktree removes a worktree and optionally deletes its branch
+func RemoveWorktree(name string, opts RemoveOptions) error {
 	worktrees, err := getWorktrees()
 	if err != nil {
 		return err
@@ -183,8 +203,20 @@ func RemoveWorktree(name string, force bool) error {
 	}
 
 	// Confirm unless force flag is set
-	if !force {
-		fmt.Printf("Remove worktree '%s' (branch: %s)? [y/N]: ", target.Name, target.Branch)
+	if !opts.Force {
+		prompt := fmt.Sprintf("Remove worktree '%s'", target.Name)
+		if target.Branch != "" {
+			prompt = fmt.Sprintf("%s (branch: %s)", prompt, target.Branch)
+		}
+		switch opts.BranchDelete {
+		case BranchDeleteSafe:
+			prompt = fmt.Sprintf("%s and delete branch?", prompt)
+		case BranchDeleteForce:
+			prompt = fmt.Sprintf("%s and force delete branch?", prompt)
+		default:
+			prompt = fmt.Sprintf("%s?", prompt)
+		}
+		fmt.Printf("%s [y/N]: ", prompt)
 		reader := bufio.NewReader(os.Stdin)
 		response, err := reader.ReadString('\n')
 		if err != nil {
@@ -201,8 +233,28 @@ func RemoveWorktree(name string, force bool) error {
 	if _, err := runGitCommand("worktree", "remove", "--force", target.Path); err != nil {
 		return err
 	}
-
 	fmt.Printf("✓ Removed worktree: %s\n", target.Name)
+
+	branchMode := opts.BranchDelete // determine whether a branch deletion has been requested
+	if branchMode == BranchDeleteNone {
+		return nil
+	}
+
+	branchName := target.Branch
+	if branchName == "" {
+		fmt.Println("Skipped branch deletion: no branch information found for worktree.")
+		return nil
+	}
+
+	flag := "-d" // default to safe deletion
+	if branchMode == BranchDeleteForce {
+		flag = "-D" // force delete for unmerged branches
+	}
+
+	if _, err := runGitCommand("branch", flag, branchName); err != nil {
+		return fmt.Errorf("deleted worktree '%s' but failed to delete branch '%s': %w", target.Name, branchName, err)
+	}
+	fmt.Printf("✓ Deleted branch: %s\n", branchName)
 	return nil
 }
 
@@ -357,4 +409,3 @@ func formatTimeAgo(t time.Time) string {
 		return t.Format("2006-01-02")
 	}
 }
-

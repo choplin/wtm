@@ -36,9 +36,15 @@ type ShowWorktreeOutput struct {
 	Worktree Worktree `json:"worktree" jsonschema:"worktree details"`
 }
 
+// RemoveWorktreeInput mirrors CLI options for removing a worktree
 type RemoveWorktreeInput struct {
-	Name  string `json:"name" jsonschema:"name of the worktree to remove"`
-	Force bool   `json:"force,omitempty" jsonschema:"skip confirmation prompt"`
+	Name string `json:"name" jsonschema:"name of the worktree to remove"`
+	// Force skips the confirmation prompt before removing the worktree
+	Force bool `json:"force,omitempty" jsonschema:"skip confirmation prompt"`
+	// DeleteBranch requests safe branch deletion (git branch -d) after removal
+	DeleteBranch bool `json:"deleteBranch,omitempty" jsonschema:"delete associated branch using git branch -d"`
+	// DeleteBranchForce requests forceful branch deletion (git branch -D) after removal
+	DeleteBranchForce bool `json:"deleteBranchForce,omitempty" jsonschema:"force delete associated branch using git branch -D"`
 }
 
 type RemoveWorktreeOutput struct {
@@ -98,7 +104,22 @@ func handleShowWorktree(ctx context.Context, req *mcp.CallToolRequest, input Sho
 }
 
 func handleRemoveWorktree(ctx context.Context, req *mcp.CallToolRequest, input RemoveWorktreeInput) (*mcp.CallToolResult, RemoveWorktreeOutput, error) {
-	err := RemoveWorktree(input.Name, input.Force)
+	if input.DeleteBranch && input.DeleteBranchForce {
+		return nil, RemoveWorktreeOutput{
+			Removed: false,
+			Message: "Cannot combine deleteBranch and deleteBranchForce options",
+		}, nil
+	}
+
+	opts := RemoveOptions{Force: input.Force}
+	switch {
+	case input.DeleteBranch:
+		opts.BranchDelete = BranchDeleteSafe // safe deletion mirrors git branch -d
+	case input.DeleteBranchForce:
+		opts.BranchDelete = BranchDeleteForce // force deletion mirrors git branch -D
+	}
+
+	err := RemoveWorktree(input.Name, opts)
 	if err != nil {
 		return nil, RemoveWorktreeOutput{
 			Removed: false,
@@ -106,9 +127,14 @@ func handleRemoveWorktree(ctx context.Context, req *mcp.CallToolRequest, input R
 		}, nil
 	}
 
+	message := fmt.Sprintf("Removed worktree: %s", input.Name)
+	if opts.BranchDelete != BranchDeleteNone {
+		message = fmt.Sprintf("%s (branch deleted)", message)
+	}
+
 	return nil, RemoveWorktreeOutput{
 		Removed: true,
-		Message: fmt.Sprintf("Removed worktree: %s", input.Name),
+		Message: message,
 	}, nil
 }
 
@@ -144,7 +170,7 @@ func newMCPServer() *mcp.Server {
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "wtm_remove",
-		Description: "Remove a git worktree by name. Use force flag to skip confirmation.",
+		Description: "Remove a git worktree by name. Use force flag to skip confirmation. Optionally delete the associated branch.",
 	}, handleRemoveWorktree)
 
 	return server

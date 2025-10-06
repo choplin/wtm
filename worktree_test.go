@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -258,9 +259,11 @@ func TestRemoveWorktree(t *testing.T) {
 	}
 
 	t.Run("remove worktree with force flag", func(t *testing.T) {
-		AddWorktree("remove-test", "", "", "")
+		if err := AddWorktree("remove-test", "", "", ""); err != nil {
+			t.Fatalf("AddWorktree failed: %v", err)
+		}
 
-		err := RemoveWorktree("remove-test", true)
+		err := RemoveWorktree("remove-test", RemoveOptions{Force: true})
 		if err != nil {
 			t.Errorf("RemoveWorktree failed: %v", err)
 		}
@@ -278,8 +281,147 @@ func TestRemoveWorktree(t *testing.T) {
 		}
 	})
 
+	t.Run("remove worktree and delete branch safely", func(t *testing.T) {
+		const name = "remove-branch-safe"
+		if err := AddWorktree(name, "", "", ""); err != nil {
+			t.Fatalf("AddWorktree failed: %v", err)
+		}
+
+		if err := RemoveWorktree(name, RemoveOptions{Force: true, BranchDelete: BranchDeleteSafe}); err != nil {
+			t.Fatalf("RemoveWorktree with branch delete failed: %v", err)
+		}
+
+		cmd := exec.Command("git", "branch", "--list", name)
+		cmd.Dir = repoPath
+		output, err := cmd.Output()
+		if err != nil {
+			t.Fatalf("git branch --list failed: %v", err)
+		}
+		if strings.TrimSpace(string(output)) != "" {
+			t.Errorf("expected branch %q to be deleted, got %q", name, strings.TrimSpace(string(output)))
+		}
+	})
+
+	t.Run("remove worktree with force branch deletion", func(t *testing.T) {
+		const name = "remove-branch-force"
+		if err := AddWorktree(name, "", "", ""); err != nil {
+			t.Fatalf("AddWorktree failed: %v", err)
+		}
+
+		worktrees, err := getWorktrees()
+		if err != nil {
+			t.Fatalf("getWorktrees failed: %v", err)
+		}
+
+		var worktreePath string
+		for _, wt := range worktrees {
+			if wt.Name == name {
+				worktreePath = wt.Path
+				break
+			}
+		}
+		if worktreePath == "" {
+			t.Fatalf("worktree path for %s not found", name)
+		}
+
+		filePath := filepath.Join(worktreePath, "unmerged.txt")
+		if err := os.WriteFile(filePath, []byte("unmerged change"), 0o644); err != nil {
+			t.Fatalf("failed to create test file: %v", err)
+		}
+
+		cmd := exec.Command("git", "add", "unmerged.txt")
+		cmd.Dir = worktreePath
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("git add failed: %v", err)
+		}
+
+		cmd = exec.Command("git", "commit", "-m", "unmerged change")
+		cmd.Dir = worktreePath
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("git commit failed: %v", err)
+		}
+
+		if err := RemoveWorktree(name, RemoveOptions{Force: true, BranchDelete: BranchDeleteForce}); err != nil {
+			t.Fatalf("RemoveWorktree with force branch delete failed: %v", err)
+		}
+
+		cmd = exec.Command("git", "branch", "--list", name)
+		cmd.Dir = repoPath
+		output, err := cmd.Output()
+		if err != nil {
+			t.Fatalf("git branch --list failed: %v", err)
+		}
+		if strings.TrimSpace(string(output)) != "" {
+			t.Errorf("expected branch %q to be deleted, got %q", name, strings.TrimSpace(string(output)))
+		}
+	})
+
+	t.Run("remove worktree safe branch deletion fails on unmerged branch", func(t *testing.T) {
+		const name = "remove-branch-safe-fail"
+		if err := AddWorktree(name, "", "", ""); err != nil {
+			t.Fatalf("AddWorktree failed: %v", err)
+		}
+
+		worktrees, err := getWorktrees()
+		if err != nil {
+			t.Fatalf("getWorktrees failed: %v", err)
+		}
+
+		var worktreePath string
+		for _, wt := range worktrees {
+			if wt.Name == name {
+				worktreePath = wt.Path
+				break
+			}
+		}
+		if worktreePath == "" {
+			t.Fatalf("worktree path for %s not found", name)
+		}
+
+		filePath := filepath.Join(worktreePath, "pending.txt")
+		if err := os.WriteFile(filePath, []byte("pending change"), 0o644); err != nil {
+			t.Fatalf("failed to create test file: %v", err)
+		}
+
+		cmd := exec.Command("git", "add", "pending.txt")
+		cmd.Dir = worktreePath
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("git add failed: %v", err)
+		}
+
+		cmd = exec.Command("git", "commit", "-m", "pending change")
+		cmd.Dir = worktreePath
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("git commit failed: %v", err)
+		}
+
+		err = RemoveWorktree(name, RemoveOptions{Force: true, BranchDelete: BranchDeleteSafe})
+		if err == nil {
+			t.Fatal("expected error when deleting branch with unmerged commits")
+		}
+		if !strings.Contains(err.Error(), "failed to delete branch") {
+			t.Errorf("unexpected error: %v", err)
+		}
+
+		cmd = exec.Command("git", "branch", "--list", name)
+		cmd.Dir = repoPath
+		output, listErr := cmd.Output()
+		if listErr != nil {
+			t.Fatalf("git branch --list failed: %v", listErr)
+		}
+		if !strings.Contains(strings.TrimSpace(string(output)), name) {
+			t.Errorf("expected branch %q to remain after failed deletion", name)
+		}
+
+		cleanup := exec.Command("git", "branch", "-D", name)
+		cleanup.Dir = repoPath
+		if err := cleanup.Run(); err != nil {
+			t.Fatalf("cleanup branch failed: %v", err)
+		}
+	})
+
 	t.Run("remove non-existent worktree should fail", func(t *testing.T) {
-		err := RemoveWorktree("non-existent", true)
+		err := RemoveWorktree("non-existent", RemoveOptions{Force: true})
 		if err == nil {
 			t.Error("Expected error for non-existent worktree, got nil")
 		}
@@ -327,4 +469,3 @@ func TestGetWorktrees(t *testing.T) {
 		}
 	})
 }
-

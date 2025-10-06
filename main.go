@@ -60,7 +60,9 @@ Options:
     -f, --field <name>     Output specific field only
 
   wtm remove:
-    -f, --force            Skip confirmation
+    -f, --force                 Skip confirmation
+    -d, --delete-branch         Delete associated branch (git branch -d)
+    -D, --delete-branch-force   Force delete associated branch (git branch -D)
 
 For more information, visit: https://github.com/akitenkgen/worktree-manager
 `)
@@ -124,8 +126,15 @@ func handleShow(args []string) {
 
 func handleRemove(args []string) {
 	fs := flag.NewFlagSet("remove", flag.ExitOnError)
+	// force skips the interactive prompt before removing a worktree
 	force := fs.Bool("f", false, "Skip confirmation")
 	fs.BoolVar(force, "force", false, "Skip confirmation")
+	// deleteBranch requests a safe branch deletion (git branch -d) after removing the worktree
+	deleteBranch := fs.Bool("d", false, "Delete associated branch (git branch -d)")
+	fs.BoolVar(deleteBranch, "delete-branch", false, "Delete associated branch (git branch -d)")
+	// deleteBranchForce requests a forceful branch deletion (git branch -D) after removing the worktree
+	deleteBranchForce := fs.Bool("D", false, "Force delete associated branch (git branch -D)")
+	fs.BoolVar(deleteBranchForce, "delete-branch-force", false, "Force delete associated branch (git branch -D)")
 
 	fs.Parse(args)
 
@@ -134,9 +143,22 @@ func handleRemove(args []string) {
 		os.Exit(1)
 	}
 
+	if *deleteBranch && *deleteBranchForce {
+		fmt.Fprintln(os.Stderr, "Error: cannot combine --delete-branch and --delete-branch-force")
+		os.Exit(1)
+	}
+
 	name := fs.Arg(0)
 
-	if err := RemoveWorktree(name, *force); err != nil {
+	opts := RemoveOptions{Force: *force}
+	switch {
+	case *deleteBranch:
+		opts.BranchDelete = BranchDeleteSafe
+	case *deleteBranchForce:
+		opts.BranchDelete = BranchDeleteForce
+	}
+
+	if err := RemoveWorktree(name, opts); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}

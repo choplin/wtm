@@ -49,7 +49,7 @@ func TestMCPToolsListInMemory(t *testing.T) {
 	expectedDescriptions := map[string]string{
 		"wtm_add":    "Create a new git worktree. Worktree name is used as directory identifier, independent from branch name.",
 		"wtm_list":   "List all git worktrees in the current repository with their details.",
-		"wtm_remove": "Remove a git worktree by name. Use force flag to skip confirmation.",
+		"wtm_remove": "Remove a git worktree by name. Use force flag to skip confirmation. Optionally delete the associated branch.",
 		"wtm_show":   "Show detailed information about a specific worktree by name.",
 	}
 
@@ -80,6 +80,8 @@ func TestMCPToolsListInMemory(t *testing.T) {
 		case "wtm_remove":
 			assertSchemaPropertyDescription(t, tool.InputSchema, "name", "name of the worktree to remove")
 			assertSchemaPropertyDescription(t, tool.InputSchema, "force", "skip confirmation prompt")
+			assertSchemaPropertyDescription(t, tool.InputSchema, "deleteBranch", "delete associated branch using git branch -d")
+			assertSchemaPropertyDescription(t, tool.InputSchema, "deleteBranchForce", "force delete associated branch using git branch -D")
 			assertSchemaPropertyDescription(t, tool.OutputSchema, "removed", "whether the worktree was removed")
 			assertSchemaPropertyDescription(t, tool.OutputSchema, "message", "result message")
 		case "wtm_show":
