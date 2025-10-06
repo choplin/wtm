@@ -2,172 +2,174 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 const version = "0.1.1"
 
 func main() {
-	if len(os.Args) < 2 {
-		printUsage()
-		os.Exit(1)
-	}
-
-	switch os.Args[1] {
-	case "add":
-		handleAdd(os.Args[2:])
-	case "list":
-		handleList(os.Args[2:])
-	case "show":
-		handleShow(os.Args[2:])
-	case "remove":
-		handleRemove(os.Args[2:])
-	case "version":
-		fmt.Printf("wtm version %s\n", version)
-	case "mcp":
-		handleMCP()
-	default:
-		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", os.Args[1])
-		printUsage()
+	rootCmd := newRootCmd()
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
-func printUsage() {
-	fmt.Fprintf(os.Stderr, `wtm - Worktree Manager
+func newRootCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:           "wtm",
+		Short:         "Worktree Manager",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cmd.Help()
+		},
+	}
 
-Usage:
-  wtm add <name> [options]     Create a new worktree
-  wtm list [options]           List all worktrees
-  wtm show <name> [options]    Show worktree details
-  wtm remove <name> [options]  Remove a worktree
-  wtm version                  Show version information
-  wtm mcp                      Start MCP server
+	cmd.AddCommand(
+		newAddCmd(),
+		newListCmd(),
+		newShowCmd(),
+		newRemoveCmd(),
+		newVersionCmd(),
+		newMCPCmd(),
+	)
 
-Options:
-  wtm add:
-    -b, --branch <name>    Create new branch with specified name
-    -B, --checkout <name>  Use existing branch
-    --base <branch>        Base branch for new branch (default: current HEAD)
-
-  wtm list:
-    --format <type>        Output format: table (default), plain, json
-
-  wtm show:
-    --format <type>        Output format: pretty (default), json
-    -f, --field <name>     Output specific field only
-
-  wtm remove:
-    -f, --force                 Skip confirmation
-    -d, --delete-branch         Delete associated branch (git branch -d)
-    -D, --delete-branch-force   Force delete associated branch (git branch -D)
-
-For more information, visit: https://github.com/akitenkgen/worktree-manager
-`)
+	return cmd
 }
 
-func handleAdd(args []string) {
-	fs := flag.NewFlagSet("add", flag.ExitOnError)
-	branch := fs.String("b", "", "Create new branch with specified name")
-	fs.StringVar(branch, "branch", "", "Create new branch with specified name")
-	checkout := fs.String("B", "", "Use existing branch")
-	fs.StringVar(checkout, "checkout", "", "Use existing branch")
-	base := fs.String("base", "", "Base branch for new branch")
+func newAddCmd() *cobra.Command {
+	var branch string
+	var checkout string
+	var base string
 
-	fs.Parse(args)
-
-	if fs.NArg() < 1 {
-		fmt.Fprintln(os.Stderr, "Error: worktree name required")
-		os.Exit(1)
+	cmd := &cobra.Command{
+		Use:   "add <name>",
+		Short: "Create a new worktree",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			if err := AddWorktree(name, branch, checkout, base); err != nil {
+				return err
+			}
+			return nil
+		},
 	}
 
-	name := fs.Arg(0)
+	cmd.Flags().StringVarP(&branch, "branch", "b", "", "Create new branch with specified name")
+	cmd.Flags().StringVarP(&checkout, "checkout", "B", "", "Use existing branch")
+	cmd.Flags().StringVar(&base, "base", "", "Base branch for new branch")
 
-	if err := AddWorktree(name, *branch, *checkout, *base); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+	return cmd
+}
+
+func newListCmd() *cobra.Command {
+	var format string
+
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List all worktrees",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := ListWorktrees(format); err != nil {
+				return err
+			}
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVar(&format, "format", "table", "Output format: table, plain, json")
+
+	return cmd
+}
+
+func newShowCmd() *cobra.Command {
+	var format string
+	var field string
+
+	cmd := &cobra.Command{
+		Use:   "show <name>",
+		Short: "Show worktree details",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			if err := ShowWorktree(name, format, field); err != nil {
+				return err
+			}
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVar(&format, "format", "pretty", "Output format: pretty, json")
+	cmd.Flags().StringVarP(&field, "field", "f", "", "Output specific field only")
+
+	return cmd
+}
+
+func newRemoveCmd() *cobra.Command {
+	var force bool
+	var deleteBranch bool
+	var deleteBranchForce bool
+
+	cmd := &cobra.Command{
+		Use:   "remove <name>",
+		Short: "Remove a worktree",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+
+			if deleteBranch && deleteBranchForce {
+				return fmt.Errorf("cannot combine --delete-branch and --delete-branch-force")
+			}
+
+			opts := RemoveOptions{Force: force}
+			switch {
+			case deleteBranch:
+				opts.BranchDelete = BranchDeleteSafe
+			case deleteBranchForce:
+				opts.BranchDelete = BranchDeleteForce
+			}
+
+			if err := RemoveWorktree(name, opts); err != nil {
+				return err
+			}
+			return nil
+		},
+	}
+
+	cmd.Flags().BoolVarP(&force, "force", "f", false, "Skip confirmation")
+	cmd.Flags().BoolVarP(&deleteBranch, "delete-branch", "d", false, "Delete associated branch (git branch -d)")
+	cmd.Flags().BoolVarP(&deleteBranchForce, "delete-branch-force", "D", false, "Force delete associated branch (git branch -D)")
+	cmd.MarkFlagsMutuallyExclusive("delete-branch", "delete-branch-force")
+
+	return cmd
+}
+
+func newVersionCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "version",
+		Short: "Show version information",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("wtm version %s\n", version)
+		},
 	}
 }
 
-func handleList(args []string) {
-	fs := flag.NewFlagSet("list", flag.ExitOnError)
-	format := fs.String("format", "table", "Output format: table, plain, json")
-
-	fs.Parse(args)
-
-	if err := ListWorktrees(*format); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
-}
-
-func handleShow(args []string) {
-	fs := flag.NewFlagSet("show", flag.ExitOnError)
-	format := fs.String("format", "pretty", "Output format: pretty, json")
-	field := fs.String("f", "", "Output specific field only")
-	fs.StringVar(field, "field", "", "Output specific field only")
-
-	fs.Parse(args)
-
-	if fs.NArg() < 1 {
-		fmt.Fprintln(os.Stderr, "Error: worktree name required")
-		os.Exit(1)
-	}
-
-	name := fs.Arg(0)
-
-	if err := ShowWorktree(name, *format, *field); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
-}
-
-func handleRemove(args []string) {
-	fs := flag.NewFlagSet("remove", flag.ExitOnError)
-	// force skips the interactive prompt before removing a worktree
-	force := fs.Bool("f", false, "Skip confirmation")
-	fs.BoolVar(force, "force", false, "Skip confirmation")
-	// deleteBranch requests a safe branch deletion (git branch -d) after removing the worktree
-	deleteBranch := fs.Bool("d", false, "Delete associated branch (git branch -d)")
-	fs.BoolVar(deleteBranch, "delete-branch", false, "Delete associated branch (git branch -d)")
-	// deleteBranchForce requests a forceful branch deletion (git branch -D) after removing the worktree
-	deleteBranchForce := fs.Bool("D", false, "Force delete associated branch (git branch -D)")
-	fs.BoolVar(deleteBranchForce, "delete-branch-force", false, "Force delete associated branch (git branch -D)")
-
-	fs.Parse(args)
-
-	if fs.NArg() < 1 {
-		fmt.Fprintln(os.Stderr, "Error: worktree name required")
-		os.Exit(1)
-	}
-
-	if *deleteBranch && *deleteBranchForce {
-		fmt.Fprintln(os.Stderr, "Error: cannot combine --delete-branch and --delete-branch-force")
-		os.Exit(1)
-	}
-
-	name := fs.Arg(0)
-
-	opts := RemoveOptions{Force: *force}
-	switch {
-	case *deleteBranch:
-		opts.BranchDelete = BranchDeleteSafe
-	case *deleteBranchForce:
-		opts.BranchDelete = BranchDeleteForce
-	}
-
-	if err := RemoveWorktree(name, opts); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
-}
-
-func handleMCP() {
-	ctx := context.Background()
-	if err := StartMCPServer(ctx); err != nil {
-		fmt.Fprintf(os.Stderr, "Error starting MCP server: %v\n", err)
-		os.Exit(1)
+func newMCPCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "mcp",
+		Short: "Start MCP server",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := context.Background()
+			if err := StartMCPServer(ctx); err != nil {
+				return err
+			}
+			return nil
+		},
 	}
 }
