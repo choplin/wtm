@@ -90,13 +90,13 @@ func TestAddWorktree(t *testing.T) {
 	t.Run("add worktree with default branch name", func(t *testing.T) {
 		err := AddWorktree("feature-1", "", "", "")
 		if err != nil {
-			t.Errorf("AddWorktree failed: %v", err)
+			t.Fatalf("AddWorktree failed: %v", err)
 		}
 
 		// Verify worktree was created
 		worktrees, err := getWorktrees()
 		if err != nil {
-			t.Errorf("getWorktrees failed: %v", err)
+			t.Fatalf("getWorktrees failed: %v", err)
 		}
 
 		found := false
@@ -105,6 +105,18 @@ func TestAddWorktree(t *testing.T) {
 				found = true
 				if wt.Branch != "feature-1" {
 					t.Errorf("Expected branch 'feature-1', got '%s'", wt.Branch)
+				}
+				expectedPath := filepath.Join(repoPath, ".git", "wtm", "worktrees", "feature-1")
+				resolvedExpected, err := filepath.EvalSymlinks(expectedPath)
+				if err != nil {
+					t.Fatalf("EvalSymlinks failed for expected path: %v", err)
+				}
+				resolvedActual, err := filepath.EvalSymlinks(wt.Path)
+				if err != nil {
+					t.Fatalf("EvalSymlinks failed for actual path: %v", err)
+				}
+				if resolvedActual != resolvedExpected {
+					t.Errorf("Expected path '%s', got '%s'", resolvedExpected, resolvedActual)
 				}
 			}
 		}

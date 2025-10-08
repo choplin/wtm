@@ -40,7 +40,6 @@ type RemoveOptions struct {
 	BranchDelete BranchDeleteMode
 }
 
-// runGitCommand executes a git command and returns the output
 func runGitCommand(args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
 	output, err := cmd.CombinedOutput()
@@ -48,6 +47,42 @@ func runGitCommand(args ...string) (string, error) {
 		return "", fmt.Errorf("%w: %s", err, string(output))
 	}
 	return string(output), nil
+}
+
+func resolveWorktreeBase() (string, error) {
+	cfg, err := loadConfig()
+	if err != nil {
+		return "", err
+	}
+
+	root := strings.TrimSpace(cfg.WorktreeRoot)
+	if root == "" {
+		root = defaultWorktreeRoot
+	}
+
+	commonDir, err := runGitCommand("rev-parse", "--git-common-dir")
+	if err != nil {
+		return "", err
+	}
+
+	commonDir = strings.TrimSpace(commonDir)
+	if !filepath.IsAbs(commonDir) {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return "", err
+		}
+		commonDir = filepath.Join(cwd, commonDir)
+	}
+
+	repoRoot := filepath.Clean(filepath.Join(commonDir, ".."))
+	var base string
+	if filepath.IsAbs(root) {
+		base = root
+	} else {
+		base = filepath.Join(repoRoot, root)
+	}
+
+	return filepath.Clean(base), nil
 }
 
 // AddWorktree creates a new worktree
@@ -69,12 +104,14 @@ func AddWorktree(name, branch, checkout, base string) error {
 	}
 
 	// Determine the path for the worktree
-	gitDir, err := runGitCommand("rev-parse", "--git-dir")
+	worktreeBase, err := resolveWorktreeBase()
 	if err != nil {
 		return err
 	}
-	gitDir = strings.TrimSpace(gitDir)
-	worktreePath := filepath.Join(gitDir, "worktrees", name)
+	if err := os.MkdirAll(worktreeBase, 0o755); err != nil {
+		return err
+	}
+	worktreePath := filepath.Join(worktreeBase, name)
 
 	// Build git worktree add command
 	var args []string

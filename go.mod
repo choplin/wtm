@@ -4,6 +4,7 @@ go 1.24.4
 
 require (
 	github.com/modelcontextprotocol/go-sdk v0.8.0
+	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/spf13/cobra v1.8.0
 )
 
