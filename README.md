@@ -30,7 +30,18 @@ go install github.com/choplin/wtm@latest
 ```bash
 git clone https://github.com/choplin/wtm.git
 cd wtm
-go build
+VERSION=$(git describe --tags --dirty --always 2>/dev/null || echo dev)
+go build -ldflags "-X main.version=$VERSION"
+```
+
+> If `git describe` is not available, the binary falls back to embedding `dev` as the version string.
+
+Or simply use the provided `Makefile`:
+
+```bash
+make build   # builds with the same version embedding logic
+make run     # runs the CLI with embedded version information
+make test    # runs go test ./...
 ```
 
 ## Usage

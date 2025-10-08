@@ -16,6 +16,8 @@ builds:
       - amd64
       - arm64
     binary: wtm
+    ldflags:
+      - -X main.version={{.Version}}
 
 archives:
   - format: tar.gz

@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const version = "0.1.1"
+var version = "dev"
 
 func main() {
 	rootCmd := newRootCmd()
