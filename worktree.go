@@ -60,6 +60,21 @@ func resolveWorktreeBase() (string, error) {
 		root = defaultWorktreeRoot
 	}
 
+	repoRoot, err := getRepoRoot()
+	if err != nil {
+		return "", err
+	}
+	var base string
+	if filepath.IsAbs(root) {
+		base = root
+	} else {
+		base = filepath.Join(repoRoot, root)
+	}
+
+	return filepath.Clean(base), nil
+}
+
+func getRepoRoot() (string, error) {
 	commonDir, err := runGitCommand("rev-parse", "--git-common-dir")
 	if err != nil {
 		return "", err
@@ -75,14 +90,7 @@ func resolveWorktreeBase() (string, error) {
 	}
 
 	repoRoot := filepath.Clean(filepath.Join(commonDir, ".."))
-	var base string
-	if filepath.IsAbs(root) {
-		base = root
-	} else {
-		base = filepath.Join(repoRoot, root)
-	}
-
-	return filepath.Clean(base), nil
+	return repoRoot, nil
 }
 
 // AddWorktree creates a new worktree
@@ -167,11 +175,20 @@ func ListWorktrees(format string) error {
 		return err
 	}
 
+	var primaryPath string
+	if format == "table" || format == "plain" {
+		path, err := getRepoRoot()
+		if err != nil {
+			return err
+		}
+		primaryPath = normalizePath(path)
+	}
+
 	switch format {
 	case "table":
-		printTableFormat(worktrees)
+		printTableFormat(worktrees, primaryPath)
 	case "plain":
-		printPlainFormat(worktrees)
+		printPlainFormat(worktrees, primaryPath)
 	case "json":
 		printJSONFormat(worktrees)
 	default:
@@ -357,7 +374,7 @@ func getWorktrees() ([]Worktree, error) {
 }
 
 // printTableFormat prints worktrees in table format
-func printTableFormat(worktrees []Worktree) {
+func printTableFormat(worktrees []Worktree, primaryPath string) {
 	if len(worktrees) == 0 {
 		return
 	}
@@ -365,15 +382,32 @@ func printTableFormat(worktrees []Worktree) {
 	fmt.Printf("%-20s %-30s %-15s\n", "NAME", "BRANCH", "CREATED")
 	for _, wt := range worktrees {
 		created := formatTimeAgo(wt.Created)
-		fmt.Printf("%-20s %-30s %-15s\n", wt.Name, wt.Branch, created)
+		fmt.Printf("%-20s %-30s %-15s\n", formatWorktreeName(wt, primaryPath), wt.Branch, created)
 	}
 }
 
 // printPlainFormat prints worktrees in plain format
-func printPlainFormat(worktrees []Worktree) {
+func printPlainFormat(worktrees []Worktree, primaryPath string) {
 	for _, wt := range worktrees {
-		fmt.Printf("%s %s %s\n", wt.Name, wt.Branch, wt.Path)
+		fmt.Printf("%s %s %s\n", formatWorktreeName(wt, primaryPath), wt.Branch, wt.Path)
 	}
+}
+
+func formatWorktreeName(wt Worktree, primaryPath string) string {
+	if primaryPath != "" && normalizePath(wt.Path) == primaryPath {
+		return fmt.Sprintf("%s (primary)", wt.Name)
+	}
+	return wt.Name
+}
+
+func normalizePath(p string) string {
+	if p == "" {
+		return ""
+	}
+	if resolved, err := filepath.EvalSymlinks(p); err == nil {
+		p = resolved
+	}
+	return filepath.Clean(p)
 }
 
 // printJSONFormat prints worktrees in JSON format

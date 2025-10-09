@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -70,6 +71,31 @@ func cleanupTestRepo(t *testing.T, repoPath string) {
 	if err := os.RemoveAll(repoPath); err != nil {
 		t.Errorf("Failed to cleanup test repo: %v", err)
 	}
+}
+
+func captureStdout(t *testing.T, fn func() error) (string, error) {
+	t.Helper()
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("Failed to create pipe: %v", err)
+	}
+	defer r.Close()
+
+	oldStdout := os.Stdout
+	os.Stdout = w
+	defer func() {
+		os.Stdout = oldStdout
+	}()
+
+	fnErr := fn()
+	w.Close()
+
+	output, readErr := io.ReadAll(r)
+	if readErr != nil {
+		t.Fatalf("Failed to read stdout: %v", readErr)
+	}
+
+	return string(output), fnErr
 }
 
 func TestAddWorktree(t *testing.T) {
@@ -178,17 +204,33 @@ func TestListWorktrees(t *testing.T) {
 	AddWorktree("test-1", "", "", "")
 	AddWorktree("test-2", "", "", "")
 
+	primaryName := filepath.Base(repoPath)
+	expected := primaryName + " (primary)"
+
 	t.Run("list in table format", func(t *testing.T) {
-		err := ListWorktrees("table")
+		output, err := captureStdout(t, func() error {
+			return ListWorktrees("table")
+		})
 		if err != nil {
 			t.Errorf("ListWorktrees failed: %v", err)
+		}
+		if !strings.Contains(output, expected) {
+			t.Errorf("expected table output to include %q, got %q", expected, output)
+		}
+		if strings.Contains(output, "test-1 (primary)") || strings.Contains(output, "test-2 (primary)") {
+			t.Errorf("unexpected primary marker in non-primary worktree output: %q", output)
 		}
 	})
 
 	t.Run("list in plain format", func(t *testing.T) {
-		err := ListWorktrees("plain")
+		output, err := captureStdout(t, func() error {
+			return ListWorktrees("plain")
+		})
 		if err != nil {
 			t.Errorf("ListWorktrees failed: %v", err)
+		}
+		if !strings.Contains(output, expected) {
+			t.Errorf("expected plain output to include %q, got %q", expected, output)
 		}
 	})
 
