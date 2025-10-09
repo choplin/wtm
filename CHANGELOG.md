@@ -12,6 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-10-09
+
+### Added
+
+- Added `ls` alias for `wtm list` to mirror common UNIX tooling.
+- Added `rm` alias for `wtm remove` so deletion flows have a short form.
+
+### Fixed
+
+- Removed the MCP `force` option and always run worktree removal non-interactively to avoid prompts during AI execution.
+
 ## [0.3.0] - 2025-10-09
 
 ### Changed
@@ -42,7 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shell integration examples (wtm-cd, fzf integration)
 - MIT License
 
-[Unreleased]: https://github.com/choplin/wtm/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/choplin/wtm/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/choplin/wtm/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/choplin/wtm/compare/v0.1.1...v0.3.0
 [0.1.1]: https://github.com/choplin/wtm/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/choplin/wtm/releases/tag/v0.1.0
