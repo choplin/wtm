@@ -77,11 +77,10 @@ func TestMCPToolsListInMemory(t *testing.T) {
 			assertSchemaPropertyDescription(t, tool.OutputSchema, "path", "absolute path to the worktree")
 		case "wtm_list":
 			assertSchemaPropertyDescription(t, tool.OutputSchema, "worktrees", "list of all worktrees")
-		case "wtm_remove":
-			assertSchemaPropertyDescription(t, tool.InputSchema, "name", "name of the worktree to remove")
-			assertSchemaPropertyDescription(t, tool.InputSchema, "force", "skip confirmation prompt")
-			assertSchemaPropertyDescription(t, tool.InputSchema, "deleteBranch", "delete associated branch using git branch -d")
-			assertSchemaPropertyDescription(t, tool.InputSchema, "deleteBranchForce", "force delete associated branch using git branch -D")
+	case "wtm_remove":
+		assertSchemaPropertyDescription(t, tool.InputSchema, "name", "name of the worktree to remove")
+		assertSchemaPropertyDescription(t, tool.InputSchema, "deleteBranch", "delete associated branch using git branch -d")
+		assertSchemaPropertyDescription(t, tool.InputSchema, "deleteBranchForce", "force delete associated branch using git branch -D")
 			assertSchemaPropertyDescription(t, tool.OutputSchema, "removed", "whether the worktree was removed")
 			assertSchemaPropertyDescription(t, tool.OutputSchema, "message", "result message")
 		case "wtm_show":

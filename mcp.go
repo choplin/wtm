@@ -39,8 +39,6 @@ type ShowWorktreeOutput struct {
 // RemoveWorktreeInput mirrors CLI options for removing a worktree
 type RemoveWorktreeInput struct {
 	Name string `json:"name" jsonschema:"name of the worktree to remove"`
-	// Force skips the confirmation prompt before removing the worktree
-	Force bool `json:"force,omitempty" jsonschema:"skip confirmation prompt"`
 	// DeleteBranch requests safe branch deletion (git branch -d) after removal
 	DeleteBranch bool `json:"deleteBranch,omitempty" jsonschema:"delete associated branch using git branch -d"`
 	// DeleteBranchForce requests forceful branch deletion (git branch -D) after removal
@@ -111,7 +109,8 @@ func handleRemoveWorktree(ctx context.Context, req *mcp.CallToolRequest, input R
 		}, nil
 	}
 
-	opts := RemoveOptions{Force: input.Force}
+	// MCP runs non-interactively, so we always force removal
+	opts := RemoveOptions{Force: true}
 	switch {
 	case input.DeleteBranch:
 		opts.BranchDelete = BranchDeleteSafe // safe deletion mirrors git branch -d
