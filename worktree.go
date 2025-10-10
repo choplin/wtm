@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // Worktree represents a git worktree
@@ -379,11 +380,41 @@ func printTableFormat(worktrees []Worktree, primaryPath string) {
 		return
 	}
 
-	fmt.Printf("%-20s %-30s %-15s\n", "NAME", "BRANCH", "CREATED")
-	for _, wt := range worktrees {
-		created := formatTimeAgo(wt.Created)
-		fmt.Printf("%-20s %-30s %-15s\n", formatWorktreeName(wt, primaryPath), wt.Branch, created)
+	headers := []string{"NAME", "BRANCH", "CREATED"}
+	rows := make([][]string, len(worktrees))
+	for i, wt := range worktrees {
+		rows[i] = []string{
+			formatWorktreeName(wt, primaryPath),
+			wt.Branch,
+			formatTimeAgo(wt.Created),
+		}
 	}
+
+	widths := make([]int, len(headers))
+	for colIdx, header := range headers {
+		width := utf8.RuneCountInString(header)
+		for _, row := range rows {
+			if w := utf8.RuneCountInString(row[colIdx]); w > width {
+				width = w
+			}
+		}
+		widths[colIdx] = width
+	}
+
+	printTableRow(headers, widths)
+	for _, row := range rows {
+		printTableRow(row, widths)
+	}
+}
+
+func printTableRow(values []string, widths []int) {
+	for idx, value := range values {
+		fmt.Printf("%-*s", widths[idx], value)
+		if idx < len(values)-1 {
+			fmt.Print("  ")
+		}
+	}
+	fmt.Println()
 }
 
 // printPlainFormat prints worktrees in plain format

@@ -249,6 +249,64 @@ func TestListWorktrees(t *testing.T) {
 	})
 }
 
+func TestPrintTableFormatAlignsColumns(t *testing.T) {
+	worktrees := []Worktree{
+		{
+			Name:   "main",
+			Branch: "trunk-branch",
+			Path:   "/repo",
+		},
+		{
+			Name:   "data-source-provider-transport",
+			Branch: "feature/extraordinarily-long-branch-name",
+			Path:   "/repo/data-source-provider-transport",
+		},
+	}
+
+	primaryPath := normalizePath("/repo")
+
+	output, err := captureStdout(t, func() error {
+		printTableFormat(worktrees, primaryPath)
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("printTableFormat failed: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimRight(output, "\r\n"), "\n")
+	expectedLines := len(worktrees) + 1
+	if len(lines) != expectedLines {
+		t.Fatalf("expected %d lines in table output, got %d", expectedLines, len(lines))
+	}
+
+	header := lines[0]
+	branchIdx := strings.Index(header, "BRANCH")
+	if branchIdx == -1 {
+		t.Fatalf("header missing BRANCH column: %q", header)
+	}
+	createdIdx := strings.Index(header, "CREATED")
+	if createdIdx == -1 {
+		t.Fatalf("header missing CREATED column: %q", header)
+	}
+
+	branchValues := []string{
+		"trunk-branch",
+		"feature/extraordinarily-long-branch-name",
+	}
+	const createdValue = "unknown"
+
+	for i, line := range lines[1:] {
+		branchPos := strings.Index(line, branchValues[i])
+		if branchPos != branchIdx {
+			t.Errorf("expected branch column to start at %d, got %d for row %d: %q", branchIdx, branchPos, i, line)
+		}
+		createdPos := strings.Index(line, createdValue)
+		if createdPos != createdIdx {
+			t.Errorf("expected created column to start at %d, got %d for row %d: %q", createdIdx, createdPos, i, line)
+		}
+	}
+}
+
 func TestShowWorktree(t *testing.T) {
 	repoPath := setupTestRepo(t)
 	defer cleanupTestRepo(t, repoPath)
