@@ -1,17 +1,34 @@
-# Worktree Manager (wtm)
+# Worktree Manager (wtm) 🪵
 
-Minimal git worktree management tool that does one thing well.
+![Go Version](https://img.shields.io/badge/go-1.24.4-00ADD8?logo=go) ![CI](https://github.com/choplin/wtm/actions/workflows/test.yml/badge.svg) ![License](https://img.shields.io/badge/license-MIT-blue)
 
-## Why wtm?
+> Seamless Git worktree orchestration for humans and AI agents alike.
 
-Managing multiple git worktrees manually is tedious. Native `git worktree` commands are verbose and require managing paths and branch names separately. wtm simplifies this by:
+`wtm` keeps every active branch in a tidy `.wtm/` playground with one-line commands, so you can spin up review branches, isolate experiments, and hand off context to AI copilots without juggling checkout paths or branch names.
 
-- Providing simple, memorable commands for common worktree operations
-- Separating worktree names from branch names for flexible naming strategies
-- Offering multiple output formats (table/plain/json) for shell scripting
-- Remaining stateless - no configuration files or metadata to manage
+## ✨ Highlights
 
-## Installation
+- ⚡ Instant setup: one command spins up or removes worktrees—zero path or branch wrangling.
+- 🗂️ Hassle-free flow: wtm tracks everything so you never have to manage folder paths or branch names by hand.
+- 🤖 AI-ready workflows: the MCP server gives assistants safe access without ceding control.
+- 🛠️ Automation ready: structured output drops straight into your scripts and CI checks.
+
+## 🚀 Quick Start
+
+1. Install `wtm` (see Installation for available options).
+2. Create a worktree: `wtm add feature-auth`.
+3. Jump in and ship: `cd .wtm/feature-auth` or use the `wcd` helper below.
+
+### Example session
+
+```bash
+wtm add feature-login
+wtm list
+wtm show feature-login
+wtm remove feature-login --force
+```
+
+## 📦 Installation
 
 ### Homebrew (macOS/Linux)
 
@@ -30,77 +47,54 @@ go install github.com/choplin/wtm@latest
 ```bash
 git clone https://github.com/choplin/wtm.git
 cd wtm
-VERSION=$(git describe --tags --dirty --always 2>/dev/null || echo dev)
-go build -ldflags "-X main.version=$VERSION"
-```
-
-> If `git describe` is not available, the binary falls back to embedding `dev` as the version string.
-
-Or simply use the provided `Makefile`:
-
-```bash
-make build   # builds with the same version embedding logic
+make build   # builds with version embedding
 make run     # runs the CLI with embedded version information
 make test    # runs go test ./...
 ```
 
-## Usage
+The `make build` target automatically discovers the version using `git describe` and falls back to `dev` when that metadata is unavailable.
+
+## 🧭 Usage Cheatsheet
 
 ### Create a worktree
 
 ```bash
-# Simple: worktree name = branch name
 wtm add feature-auth
-
-# Different worktree and branch names
 wtm add api -b feature/api-refactoring --base main
-
-# Checkout existing branch with simple worktree name
 wtm add review-pr-456 -B origin/feature/complex-branch-name
 ```
 
-**Options:**
+By default, `wtm add <name>` creates a new branch and worktree that both use `<name>` so you can start working immediately without extra flags.
 
-- `-b, --branch <name>`: Create new branch with specified name
-- `-B, --checkout <name>`: Use existing branch
-- `--base <branch>`: Base branch for new branch (default: current HEAD)
+Options:
+
+- `-b, --branch <name>`: Create a new branch with the provided name.
+- `-B, --checkout <name>`: Use an existing branch.
+- `--base <branch>`: Set the base branch for a new branch (defaults to current HEAD).
 
 ### List worktrees
 
 ```bash
-# Table format (default)
-wtm list
-
-# Plain format (for scripting)
-wtm list --format plain
-
-# JSON format
-wtm list --format json
+wtm list                # table (default)
+wtm list --format plain # script-friendly
+wtm list --format json  # machine-readable
 ```
 
 ### Show worktree details
 
 ```bash
-# Pretty format (default)
 wtm show api
-
-# JSON format
 wtm show api --format json
-
-# Get specific field
 wtm show api --field path
 wtm show api -f branch
 ```
 
-**Available fields:** `name`, `branch`, `path`, `head`, `created`
+Available fields: `name`, `branch`, `path`, `head`, `created`.
 
 ### Remove a worktree
 
 ```bash
-# With confirmation prompt
 wtm remove feature-auth
-
-# Skip confirmation
 wtm remove feature-auth --force
 ```
 
@@ -110,48 +104,63 @@ wtm remove feature-auth --force
 wtm version
 ```
 
-### MCP Server (for AI integration)
+## 🤖 MCP Server (AI integration)
 
-Start an MCP (Model Context Protocol) server to enable AI tools like Claude Code to manage worktrees:
+Launch the MCP (Model Context Protocol) server to let AI agents manage worktrees:
 
 ```bash
 wtm mcp
 ```
 
-The MCP server exposes four tools over stdio:
+The server exposes these tools over stdio:
 
-- `wtm_add`: Create a new worktree
-- `wtm_list`: List all worktrees
-- `wtm_show`: Show worktree details
-- `wtm_remove`: Remove a worktree
+- `wtm_add`: Create a new worktree.
+- `wtm_list`: List all worktrees.
+- `wtm_show`: Show worktree details.
+- `wtm_remove`: Remove a worktree.
 
-**Example MCP configuration for Claude Code:**
+### Claude Code example
 
 ```json
 {
   "mcpServers": {
     "wtm": {
-      "command": "/path/to/wtm",
+      "command": "wtm",
       "args": ["mcp"]
     }
   }
 }
 ```
 
-## Shell Integration
+## 🗂️ Worktree Layout (`.wtm/`)
 
-### Quick navigation
+By default, `wtm` creates real Git worktrees under `.wtm/<worktree-name>`—whether you run the CLI directly or via the MCP server. Each directory is a standard Git worktree, so you can open it in an editor, run tests, or remove it with `wtm remove`. `wtm` itself remains stateless—Git stores all metadata—while the `.wtm/` folder simply keeps the worktree directories grouped in one place.
 
-Add to your `~/.zshrc` or `~/.bashrc`:
+## 🧠 Design Principles
+
+### Do One Thing Well
+
+`wtm` focuses exclusively on Git worktree management—no task runners, no extra scaffolding.
+
+### Stateless by Design
+
+Git is the single source of truth. `wtm` reads the repository state directly instead of maintaining custom metadata. The `.wtm/` directory only contains actual Git worktree checkouts.
+
+### Worktree Names vs. Branch Names
+
+`wtm add` defaults to matching the worktree and branch names so you can move fast, yet you can split them whenever a workflow demands it—even running multiple worktrees off the same branch for parallel experiments.
+
+## 📚 Tips & Tricks
+
+### Shell helpers
 
 ```bash
-# Navigate to worktree by name
 wtm-cd() {
-    local path=$(wtm show "$1" --field path 2>/dev/null)
-    if [ -n "$path" ]; then
-        cd "$path"
+    local dir=$(wtm show "$1" -f path)
+    if [ -d "$dir" ]; then
+        cd "$dir"
     else
-        echo "Worktree not found: $1" >&2
+        echo "worktree not found: $1" >&2
         return 1
     fi
 }
@@ -164,9 +173,12 @@ wcd api
 ### fzf integration
 
 ```bash
-# Interactive worktree selector
 wtm-select() {
-    local selection=$(wtm list --format plain | fzf --preview 'wtm show {1} --format pretty' | awk '{print $1}')
+    local selection=$(
+        wtm list \
+            | fzf --header-lines=1 --preview 'wtm show {1} --format pretty' \
+            | awk '{print $1}'
+    )
     if [ -n "$selection" ]; then
         wtm-cd "$selection"
     fi
@@ -174,10 +186,10 @@ wtm-select() {
 alias wsel=wtm-select
 
 # Usage
-wsel  # Opens fzf selector
+wsel
 ```
 
-### Get branch name for scripting
+### Scripting helpers
 
 ```bash
 # Compare with main branch
@@ -185,13 +197,11 @@ git diff main..$(wtm show api -f branch)
 
 # Check status of all worktrees
 for name in $(wtm list --format plain | awk '{print $1}'); do
-    echo "$name: $(git -C $(wtm show $name -f path) status --short)"
+    echo "$name: $(git -C $(wtm show "$name" -f path) status --short)"
 done
 ```
 
-## Examples
-
-### Multiple approaches for the same issue
+### Exploratory workflows
 
 ```bash
 # Try different solutions in parallel
@@ -202,93 +212,17 @@ wtm add fix-123-approach2 -b bugfix/issue-123-alternative
 git diff $(wtm show fix-123-approach1 -f branch)..$(wtm show fix-123-approach2 -f branch)
 ```
 
-### PR review workflow
-
-```bash
-# Create worktree for PR review
-wtm add review-pr-456 -B origin/feature/complex-branch-name
-
-# Navigate and review
-wcd review-pr-456
-git log -p
-
-# Clean up after review
-wtm remove review-pr-456 -f
-```
-
-## Design Philosophy
-
-### Do One Thing Well
-
-`wtm` focuses exclusively on git worktree management. No session management, no task execution, no unnecessary complexity.
-
-### Stateless Operation
-
-Git is the single source of truth. No metadata files, no `.wtm` directory. All information is derived directly from git commands.
-
-### Worktree Names vs Branch Names
-
-Unlike other tools, `wtm` separates worktree names from branch names. This allows:
-
-- Simple, memorable worktree names
-- Complex branch names (e.g., `feature/long/nested/name`)
-- Multiple worktrees for the same branch
-
-### Non-Goals
-
-`wtm` intentionally does NOT include:
-
-- Session/task management
-- Configuration files
-- Metadata storage
-- Hooks or plugins
-- TUI interface
-
-## Comparison with Alternatives
-
-### vs. `git worktree` (native)
-
-**git worktree:**
-
-```bash
-git worktree add ../project-feature-x -b feature-x origin/main
-cd ../project-feature-x
-```
-
-**wtm:**
-
-```bash
-wtm add feature-x --base origin/main
-wcd feature-x
-```
-
-### vs. amux
-
-`wtm` is inspired by lessons learned from [amux](https://github.com/choplin/amux):
-
-- Simpler: 4 commands instead of 20+
-- Stateless: No metadata files
-- Focused: No session/task management
-- Lighter: < 500 LOC vs. thousands
-
-## Development
-
-### Run tests
+## 🧑‍💻 Development
 
 ```bash
 go test -v
-```
-
-### Build
-
-```bash
 go build -o wtm
 ```
 
-## Contributing
+## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit issues or pull requests.
+Contributions are welcome! Feel free to open an issue or submit a pull request.
 
-## License
+## 📄 License
 
-MIT License - see LICENSE file for details
+MIT License. See `LICENSE` for details.
