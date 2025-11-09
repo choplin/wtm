@@ -117,7 +117,7 @@ func AddWorktree(name, branch, checkout, base string) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(worktreeBase, 0o755); err != nil {
+	if err := os.MkdirAll(worktreeBase, 0o750); err != nil {
 		return err
 	}
 	worktreePath := filepath.Join(worktreeBase, name)
@@ -507,7 +507,6 @@ func formatTimeAgo(t time.Time) string {
 			return "1 day ago"
 		}
 		return fmt.Sprintf("%d days ago", days)
-	} else {
-		return t.Format("2006-01-02")
 	}
+	return t.Format("2006-01-02")
 }

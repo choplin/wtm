@@ -24,7 +24,7 @@ func newRootCmd() *cobra.Command {
 		Short:         "Worktree Manager",
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Help()
 		},
 	}
@@ -50,7 +50,7 @@ func newAddCmd() *cobra.Command {
 		Use:   "add <name>",
 		Short: "Create a new worktree",
 		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			name := args[0]
 			if err := AddWorktree(name, branch, checkout, base); err != nil {
 				return err
@@ -70,11 +70,11 @@ func newListCmd() *cobra.Command {
 	var format string
 
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "List all worktrees",
+		Use:     "list",
+		Short:   "List all worktrees",
 		Aliases: []string{"ls"},
-		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:    cobra.NoArgs,
+		RunE: func(_ *cobra.Command, _ []string) error {
 			if err := ListWorktrees(format); err != nil {
 				return err
 			}
@@ -95,7 +95,7 @@ func newShowCmd() *cobra.Command {
 		Use:   "show <name>",
 		Short: "Show worktree details",
 		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			name := args[0]
 			if err := ShowWorktree(name, format, field); err != nil {
 				return err
@@ -116,11 +116,11 @@ func newRemoveCmd() *cobra.Command {
 	var deleteBranchForce bool
 
 	cmd := &cobra.Command{
-		Use:   "remove <name>",
-		Short: "Remove a worktree",
+		Use:     "remove <name>",
+		Short:   "Remove a worktree",
 		Aliases: []string{"rm"},
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:    cobra.ExactArgs(1),
+		RunE: func(_ *cobra.Command, args []string) error {
 			name := args[0]
 
 			if deleteBranch && deleteBranchForce {
@@ -155,7 +155,7 @@ func newVersionCmd() *cobra.Command {
 		Use:   "version",
 		Short: "Show version information",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			fmt.Printf("wtm version %s\n", version)
 		},
 	}
@@ -166,7 +166,7 @@ func newMCPCmd() *cobra.Command {
 		Use:   "mcp",
 		Short: "Start MCP server",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			ctx := context.Background()
 			if err := StartMCPServer(ctx); err != nil {
 				return err

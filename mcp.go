@@ -52,7 +52,7 @@ type RemoveWorktreeOutput struct {
 
 // Tool handlers
 
-func handleAddWorktree(ctx context.Context, req *mcp.CallToolRequest, input AddWorktreeInput) (*mcp.CallToolResult, AddWorktreeOutput, error) {
+func handleAddWorktree(_ context.Context, _ *mcp.CallToolRequest, input AddWorktreeInput) (*mcp.CallToolResult, AddWorktreeOutput, error) {
 	err := AddWorktree(input.Name, input.Branch, input.Checkout, input.Base)
 	if err != nil {
 		return nil, AddWorktreeOutput{}, fmt.Errorf("failed to add worktree: %w", err)
@@ -77,7 +77,7 @@ func handleAddWorktree(ctx context.Context, req *mcp.CallToolRequest, input AddW
 	return nil, AddWorktreeOutput{}, fmt.Errorf("worktree created but not found")
 }
 
-func handleListWorktrees(ctx context.Context, req *mcp.CallToolRequest, input ListWorktreesInput) (*mcp.CallToolResult, ListWorktreesOutput, error) {
+func handleListWorktrees(_ context.Context, _ *mcp.CallToolRequest, _ ListWorktreesInput) (*mcp.CallToolResult, ListWorktreesOutput, error) {
 	worktrees, err := getWorktrees()
 	if err != nil {
 		return nil, ListWorktreesOutput{}, fmt.Errorf("failed to list worktrees: %w", err)
@@ -86,7 +86,7 @@ func handleListWorktrees(ctx context.Context, req *mcp.CallToolRequest, input Li
 	return nil, ListWorktreesOutput{Worktrees: worktrees}, nil
 }
 
-func handleShowWorktree(ctx context.Context, req *mcp.CallToolRequest, input ShowWorktreeInput) (*mcp.CallToolResult, ShowWorktreeOutput, error) {
+func handleShowWorktree(_ context.Context, _ *mcp.CallToolRequest, input ShowWorktreeInput) (*mcp.CallToolResult, ShowWorktreeOutput, error) {
 	worktrees, err := getWorktrees()
 	if err != nil {
 		return nil, ShowWorktreeOutput{}, fmt.Errorf("failed to get worktrees: %w", err)
@@ -101,7 +101,7 @@ func handleShowWorktree(ctx context.Context, req *mcp.CallToolRequest, input Sho
 	return nil, ShowWorktreeOutput{}, fmt.Errorf("worktree '%s' not found", input.Name)
 }
 
-func handleRemoveWorktree(ctx context.Context, req *mcp.CallToolRequest, input RemoveWorktreeInput) (*mcp.CallToolResult, RemoveWorktreeOutput, error) {
+func handleRemoveWorktree(_ context.Context, _ *mcp.CallToolRequest, input RemoveWorktreeInput) (*mcp.CallToolResult, RemoveWorktreeOutput, error) {
 	if input.DeleteBranch && input.DeleteBranchForce {
 		return nil, RemoveWorktreeOutput{
 			Removed: false,

@@ -1,3 +1,4 @@
+// Package main implements wtm (worktree manager), a CLI tool for managing Git worktrees.
 package main
 
 import (
@@ -32,7 +33,7 @@ func loadConfig() (Config, error) {
 			configErr = err
 			return
 		}
-		data, err := os.ReadFile(path)
+		data, err := os.ReadFile(path) //nolint:gosec // Config file path is from user's home directory
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				return

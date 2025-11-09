@@ -22,7 +22,7 @@ func setupTestRepo(t *testing.T) string {
 	cmd := exec.Command("git", "init")
 	cmd.Dir = tmpDir
 	if err := cmd.Run(); err != nil {
-		os.RemoveAll(tmpDir)
+		_ = os.RemoveAll(tmpDir)
 		t.Fatalf("Failed to init git repo: %v", err)
 	}
 
@@ -30,35 +30,35 @@ func setupTestRepo(t *testing.T) string {
 	cmd = exec.Command("git", "config", "user.name", "Test User")
 	cmd.Dir = tmpDir
 	if err := cmd.Run(); err != nil {
-		os.RemoveAll(tmpDir)
+		_ = os.RemoveAll(tmpDir)
 		t.Fatalf("Failed to config git user.name: %v", err)
 	}
 
 	cmd = exec.Command("git", "config", "user.email", "test@example.com")
 	cmd.Dir = tmpDir
 	if err := cmd.Run(); err != nil {
-		os.RemoveAll(tmpDir)
+		_ = os.RemoveAll(tmpDir)
 		t.Fatalf("Failed to config git user.email: %v", err)
 	}
 
 	// Create initial commit
 	testFile := filepath.Join(tmpDir, "README.md")
-	if err := os.WriteFile(testFile, []byte("# Test Repo\n"), 0o644); err != nil {
-		os.RemoveAll(tmpDir)
+	if err := os.WriteFile(testFile, []byte("# Test Repo\n"), 0o600); err != nil {
+		_ = os.RemoveAll(tmpDir)
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
 	cmd = exec.Command("git", "add", "README.md")
 	cmd.Dir = tmpDir
 	if err := cmd.Run(); err != nil {
-		os.RemoveAll(tmpDir)
+		_ = os.RemoveAll(tmpDir)
 		t.Fatalf("Failed to add test file: %v", err)
 	}
 
 	cmd = exec.Command("git", "commit", "-m", "Initial commit")
 	cmd.Dir = tmpDir
 	if err := cmd.Run(); err != nil {
-		os.RemoveAll(tmpDir)
+		_ = os.RemoveAll(tmpDir)
 		t.Fatalf("Failed to create initial commit: %v", err)
 	}
 
@@ -88,7 +88,7 @@ func captureStdout(t *testing.T, fn func() error) (string, error) {
 	}()
 
 	fnErr := fn()
-	w.Close()
+	_ = w.Close()
 
 	output, readErr := io.ReadAll(r)
 	if readErr != nil {
@@ -201,8 +201,8 @@ func TestListWorktrees(t *testing.T) {
 	}
 
 	// Create test worktrees
-	AddWorktree("test-1", "", "", "")
-	AddWorktree("test-2", "", "", "")
+	_ = AddWorktree("test-1", "", "", "")
+	_ = AddWorktree("test-2", "", "", "")
 
 	primaryName := filepath.Base(repoPath)
 	expected := primaryName + " (primary)"
@@ -322,7 +322,7 @@ func TestShowWorktree(t *testing.T) {
 	}
 
 	// Create test worktree
-	AddWorktree("show-test", "", "", "")
+	_ = AddWorktree("show-test", "", "", "")
 
 	t.Run("show in pretty format", func(t *testing.T) {
 		err := ShowWorktree("show-test", "pretty", "")
@@ -437,7 +437,7 @@ func TestRemoveWorktree(t *testing.T) {
 		}
 
 		filePath := filepath.Join(worktreePath, "unmerged.txt")
-		if err := os.WriteFile(filePath, []byte("unmerged change"), 0o644); err != nil {
+		if err := os.WriteFile(filePath, []byte("unmerged change"), 0o600); err != nil {
 			t.Fatalf("failed to create test file: %v", err)
 		}
 
@@ -491,7 +491,7 @@ func TestRemoveWorktree(t *testing.T) {
 		}
 
 		filePath := filepath.Join(worktreePath, "pending.txt")
-		if err := os.WriteFile(filePath, []byte("pending change"), 0o644); err != nil {
+		if err := os.WriteFile(filePath, []byte("pending change"), 0o600); err != nil {
 			t.Fatalf("failed to create test file: %v", err)
 		}
 
@@ -567,8 +567,8 @@ func TestGetWorktrees(t *testing.T) {
 	})
 
 	t.Run("get worktrees after adding some", func(t *testing.T) {
-		AddWorktree("wt1", "", "", "")
-		AddWorktree("wt2", "", "", "")
+		_ = AddWorktree("wt1", "", "", "")
+		_ = AddWorktree("wt2", "", "", "")
 
 		worktrees, err := getWorktrees()
 		if err != nil {

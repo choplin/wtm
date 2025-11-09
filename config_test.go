@@ -53,7 +53,7 @@ func TestResolveWorktreeBaseWithConfigFile(t *testing.T) {
 	}
 
 	configFile := filepath.Join(t.TempDir(), "config.toml")
-	if err := os.WriteFile(configFile, []byte("worktreeRoot = \"custom/worktrees\"\n"), 0o644); err != nil {
+	if err := os.WriteFile(configFile, []byte("worktreeRoot = \"custom/worktrees\"\n"), 0o600); err != nil {
 		t.Fatalf("Failed to write config file: %v", err)
 	}
 
