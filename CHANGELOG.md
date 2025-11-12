@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-11-12
+
 ### Added
 
 - Allow omitting worktree name when using `-B` option to checkout existing branch. The branch name is used as worktree name with slashes replaced by hyphens.
@@ -57,7 +59,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shell integration examples (wtm-cd, fzf integration)
 - MIT License
 
-[Unreleased]: https://github.com/choplin/wtm/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/choplin/wtm/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/choplin/wtm/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/choplin/wtm/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/choplin/wtm/compare/v0.1.1...v0.3.0
 [0.1.1]: https://github.com/choplin/wtm/compare/v0.1.0...v0.1.1
