@@ -101,6 +101,15 @@ func AddWorktree(name, branch, checkout, base string) error {
 		return fmt.Errorf("not in a git repository")
 	}
 
+	// If name is empty, derive it from checkout branch name
+	if name == "" {
+		if checkout == "" {
+			return fmt.Errorf("worktree name is required when not using -B option")
+		}
+		// Replace slashes with hyphens
+		name = strings.ReplaceAll(checkout, "/", "-")
+	}
+
 	// Check if worktree already exists
 	worktrees, err := getWorktrees()
 	if err != nil {

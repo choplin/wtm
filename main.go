@@ -47,11 +47,14 @@ func newAddCmd() *cobra.Command {
 	var base string
 
 	cmd := &cobra.Command{
-		Use:   "add <name>",
+		Use:   "add [<name>]",
 		Short: "Create a new worktree",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(_ *cobra.Command, args []string) error {
-			name := args[0]
+			name := ""
+			if len(args) == 1 {
+				name = args[0]
+			}
 			if err := AddWorktree(name, branch, checkout, base); err != nil {
 				return err
 			}

@@ -1,6 +1,6 @@
 ---
 created: 2025-10-02
-updated: 2025-10-09
+updated: 2025-11-12
 ---
 
 # Changelog
@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+
+- Allow omitting worktree name when using `-B` option to checkout existing branch. The branch name is used as worktree name with slashes replaced by hyphens.
 
 ## [0.4.0] - 2025-10-09
 

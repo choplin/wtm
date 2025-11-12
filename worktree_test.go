@@ -184,6 +184,116 @@ func TestAddWorktree(t *testing.T) {
 			t.Error("Expected error when adding duplicate worktree, got nil")
 		}
 	})
+
+	t.Run("add worktree with -B and auto-generated name", func(t *testing.T) {
+		// First create a branch
+		if _, err := runGitCommand("branch", "test-branch"); err != nil {
+			t.Fatalf("Failed to create test branch: %v", err)
+		}
+
+		// Add worktree without name, using -B
+		err := AddWorktree("", "", "test-branch", "")
+		if err != nil {
+			t.Fatalf("AddWorktree failed: %v", err)
+		}
+
+		// Verify worktree was created with branch name
+		worktrees, err := getWorktrees()
+		if err != nil {
+			t.Fatalf("getWorktrees failed: %v", err)
+		}
+
+		found := false
+		for _, wt := range worktrees {
+			if wt.Name == "test-branch" {
+				found = true
+				if wt.Branch != "test-branch" {
+					t.Errorf("Expected branch 'test-branch', got '%s'", wt.Branch)
+				}
+			}
+		}
+
+		if !found {
+			t.Error("Worktree 'test-branch' was not created")
+		}
+	})
+
+	t.Run("add worktree with -B and slash in branch name", func(t *testing.T) {
+		// Create a branch with slash
+		if _, err := runGitCommand("branch", "feature/auth-fix"); err != nil {
+			t.Fatalf("Failed to create test branch: %v", err)
+		}
+
+		// Add worktree without name, using -B
+		err := AddWorktree("", "", "feature/auth-fix", "")
+		if err != nil {
+			t.Fatalf("AddWorktree failed: %v", err)
+		}
+
+		// Verify worktree was created with slash replaced by hyphen
+		worktrees, err := getWorktrees()
+		if err != nil {
+			t.Fatalf("getWorktrees failed: %v", err)
+		}
+
+		found := false
+		for _, wt := range worktrees {
+			if wt.Name == "feature-auth-fix" {
+				found = true
+				if wt.Branch != "feature/auth-fix" {
+					t.Errorf("Expected branch 'feature/auth-fix', got '%s'", wt.Branch)
+				}
+			}
+		}
+
+		if !found {
+			t.Error("Worktree 'feature-auth-fix' was not created")
+		}
+	})
+
+	t.Run("add worktree with explicit name and -B", func(t *testing.T) {
+		// Create another branch
+		if _, err := runGitCommand("branch", "another-branch"); err != nil {
+			t.Fatalf("Failed to create test branch: %v", err)
+		}
+
+		// Add worktree with explicit name
+		err := AddWorktree("custom-name", "", "another-branch", "")
+		if err != nil {
+			t.Fatalf("AddWorktree failed: %v", err)
+		}
+
+		// Verify worktree was created with custom name
+		worktrees, err := getWorktrees()
+		if err != nil {
+			t.Fatalf("getWorktrees failed: %v", err)
+		}
+
+		found := false
+		for _, wt := range worktrees {
+			if wt.Name == "custom-name" {
+				found = true
+				if wt.Branch != "another-branch" {
+					t.Errorf("Expected branch 'another-branch', got '%s'", wt.Branch)
+				}
+			}
+		}
+
+		if !found {
+			t.Error("Worktree 'custom-name' was not created")
+		}
+	})
+
+	t.Run("add worktree without name and without -B should fail", func(t *testing.T) {
+		err := AddWorktree("", "", "", "")
+		if err == nil {
+			t.Error("Expected error when adding worktree without name and without -B, got nil")
+		}
+		expectedMsg := "worktree name is required when not using -B option"
+		if err != nil && !strings.Contains(err.Error(), expectedMsg) {
+			t.Errorf("Expected error message to contain '%s', got '%s'", expectedMsg, err.Error())
+		}
+	})
 }
 
 func TestListWorktrees(t *testing.T) {
