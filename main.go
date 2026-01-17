@@ -96,9 +96,10 @@ func newShowCmd() *cobra.Command {
 	var field string
 
 	cmd := &cobra.Command{
-		Use:   "show <name>",
-		Short: "Show worktree details",
-		Args:  cobra.ExactArgs(1),
+		Use:               "show <name>",
+		Short:             "Show worktree details",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: completeWorktreeNames,
 		RunE: func(_ *cobra.Command, args []string) error {
 			name := args[0]
 			if err := ShowWorktree(name, format, field); err != nil {
@@ -120,10 +121,11 @@ func newRemoveCmd() *cobra.Command {
 	var deleteBranchForce bool
 
 	cmd := &cobra.Command{
-		Use:     "remove <name>",
-		Short:   "Remove a worktree",
-		Aliases: []string{"rm"},
-		Args:    cobra.ExactArgs(1),
+		Use:               "remove <name>",
+		Short:             "Remove a worktree",
+		Aliases:           []string{"rm"},
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: completeWorktreeNames,
 		RunE: func(_ *cobra.Command, args []string) error {
 			name := args[0]
 
@@ -201,4 +203,22 @@ func newCompletionCmd() *cobra.Command {
 			}
 		},
 	}
+}
+
+func completeWorktreeNames(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
+	if len(args) != 0 {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+
+	worktrees, err := getWorktrees()
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveError
+	}
+
+	var names []string
+	for _, wt := range worktrees {
+		names = append(names, fmt.Sprintf("%s\t%s", wt.Name, wt.Branch))
+	}
+
+	return names, cobra.ShellCompDirectiveNoFileComp
 }
