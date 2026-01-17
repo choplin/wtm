@@ -171,6 +171,12 @@ func AddWorktree(name, branch, checkout, base string) error {
 			fmt.Printf("✓ Created worktree: %s\n", wt.Name)
 			fmt.Printf("  Branch: %s\n", wt.Branch)
 			fmt.Printf("  Path: %s\n", wt.Path)
+
+			// Run post-add hooks
+			if err := runPostAddHook(wt.Path); err != nil {
+				return err
+			}
+
 			return nil
 		}
 	}
