@@ -135,6 +135,16 @@ wtm completion powershell > wtm.ps1
 
 After setup, worktree names are auto-completed for `show` and `remove` commands.
 
+### Configuration
+
+Edit the project configuration file (`.git/wtm/config.toml`):
+
+```bash
+wtm config edit
+```
+
+This opens the config file in your `$EDITOR`. If the file doesn't exist, it will be created.
+
 ## 🤖 MCP Server (AI integration)
 
 Launch the MCP (Model Context Protocol) server to let AI agents manage worktrees:

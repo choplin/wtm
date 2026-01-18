@@ -34,6 +34,7 @@ func newRootCmd() *cobra.Command {
 		newListCmd(),
 		newShowCmd(),
 		newRemoveCmd(),
+		newConfigCmd(),
 		newVersionCmd(),
 		newMCPCmd(),
 		newCompletionCmd(),
@@ -201,6 +202,31 @@ func newCompletionCmd() *cobra.Command {
 			default:
 				return fmt.Errorf("unsupported shell: %s", args[0])
 			}
+		},
+	}
+}
+
+func newConfigCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "config",
+		Short: "Manage project configuration",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return cmd.Help()
+		},
+	}
+
+	cmd.AddCommand(newConfigEditCmd())
+
+	return cmd
+}
+
+func newConfigEditCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "edit",
+		Short: "Edit project configuration in your editor",
+		Args:  cobra.NoArgs,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return EditConfig()
 		},
 	}
 }

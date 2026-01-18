@@ -302,6 +302,69 @@ func TestHookRunner_OperationOrder(t *testing.T) {
 	}
 }
 
+func TestEditConfig_NoEditor(t *testing.T) {
+	t.Parallel()
+
+	// Save and clear EDITOR
+	oldEditor := os.Getenv("EDITOR")
+	os.Unsetenv("EDITOR")
+	t.Cleanup(func() {
+		if oldEditor != "" {
+			os.Setenv("EDITOR", oldEditor)
+		}
+	})
+
+	err := EditConfig()
+	if err == nil {
+		t.Error("expected error when EDITOR is not set")
+	}
+	if !strings.Contains(err.Error(), "EDITOR environment variable is not set") {
+		t.Errorf("unexpected error message: %v", err)
+	}
+}
+
+func TestProjectConfigPath(t *testing.T) {
+	// Not parallel because we use os.Chdir
+
+	// Create a temporary git repository
+	tmpDir := t.TempDir()
+	cmd := exec.Command("git", "init")
+	cmd.Dir = tmpDir
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("failed to initialize git repo: %v: %s", err, out)
+	}
+
+	// Change to the temp directory
+	oldDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(oldDir); err != nil {
+			t.Logf("failed to restore directory: %v", err)
+		}
+	})
+
+	path, err := projectConfigPath()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Resolve symlinks for comparison (macOS /tmp -> /private/tmp)
+	resolvedTmpDir, err := filepath.EvalSymlinks(tmpDir)
+	if err != nil {
+		t.Fatalf("failed to resolve tmpDir symlinks: %v", err)
+	}
+
+	expected := filepath.Join(resolvedTmpDir, ".git", "wtm", "config.toml")
+	if path != expected {
+		t.Errorf("expected path %q, got %q", expected, path)
+	}
+}
+
 func TestLoadProjectConfig(t *testing.T) {
 	// Not parallel because we use os.Chdir
 

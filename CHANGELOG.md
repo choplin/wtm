@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `wtm config edit` command to open project configuration in `$EDITOR`
 - Hook file operations: `copy` and `link` options for copying files or creating symlinks from repo root to worktree
 - Post-add hook support via `.git/wtm/config.toml` for running commands after worktree creation
 - Shell completion command (`wtm completion [bash|zsh|fish|powershell]`)

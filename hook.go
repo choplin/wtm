@@ -214,3 +214,42 @@ func runPostAddHook(worktreePath string) error {
 	runner := NewHookRunner(config.Hooks.PostAdd, repoRoot)
 	return runner.Run(worktreePath)
 }
+
+// projectConfigPath returns the path to the project configuration file
+func projectConfigPath() (string, error) {
+	repoRoot, err := getRepoRoot()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(repoRoot, ".git", "wtm", "config.toml"), nil
+}
+
+// EditConfig opens the project configuration file in the user's editor
+func EditConfig() error {
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		return fmt.Errorf("EDITOR environment variable is not set")
+	}
+
+	configPath, err := projectConfigPath()
+	if err != nil {
+		return err
+	}
+
+	// Create config directory and empty file if it doesn't exist
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
+			return fmt.Errorf("failed to create config directory: %w", err)
+		}
+		if err := os.WriteFile(configPath, []byte{}, 0o644); err != nil {
+			return fmt.Errorf("failed to create config file: %w", err)
+		}
+	}
+
+	cmd := exec.Command(editor, configPath)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	return cmd.Run()
+}
