@@ -53,5 +53,6 @@ brews:
     license: MIT
     install: |
       bin.install "wtm"
+      bin.install_symlink "wtm" => "git-wtm"
     test: |
       system "#{bin}/wtm version"

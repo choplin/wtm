@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-01-18
+
+### Fixed
+
+- Homebrew formula now includes `git-wtm` symlink for `git wtm` subcommand support
+
 ## [0.6.0] - 2026-01-18
 
 ### Added
@@ -70,7 +76,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shell integration examples (wtm-cd, fzf integration)
 - MIT License
 
-[Unreleased]: https://github.com/choplin/wtm/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/choplin/wtm/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/choplin/wtm/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/choplin/wtm/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/choplin/wtm/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/choplin/wtm/compare/v0.3.0...v0.4.0
