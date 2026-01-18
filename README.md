@@ -47,12 +47,23 @@ go install github.com/choplin/wtm@latest
 ```bash
 git clone https://github.com/choplin/wtm.git
 cd wtm
-make build   # builds with version embedding
-make run     # runs the CLI with embedded version information
-make test    # runs go test ./...
+make build       # builds with version embedding
+make install     # installs to $GOBIN
+make install-git # installs as git-wtm for git subcommand usage
+make test        # runs go test ./...
 ```
 
 The `make build` target automatically discovers the version using `git describe` and falls back to `dev` when that metadata is unavailable.
+
+### Git subcommand
+
+Install with `make install-git` to use wtm as a git subcommand:
+
+```bash
+git wtm add feature-auth
+git wtm list
+git wtm remove feature-auth
+```
 
 ## 🧭 Usage Cheatsheet
 
@@ -104,6 +115,26 @@ wtm remove feature-auth --force
 wtm version
 ```
 
+### Shell completion
+
+Generate completion scripts for your shell:
+
+```bash
+# Bash
+wtm completion bash > /etc/bash_completion.d/wtm
+
+# Zsh
+wtm completion zsh > "${fpath[1]}/_wtm"
+
+# Fish
+wtm completion fish > ~/.config/fish/completions/wtm.fish
+
+# PowerShell
+wtm completion powershell > wtm.ps1
+```
+
+After setup, worktree names are auto-completed for `show` and `remove` commands.
+
 ## 🤖 MCP Server (AI integration)
 
 Launch the MCP (Model Context Protocol) server to let AI agents manage worktrees:
@@ -131,6 +162,40 @@ The server exposes these tools over stdio:
   }
 }
 ```
+
+## 🪝 Hooks
+
+Run commands and copy files automatically after creating a worktree. Create `.git/wtm/config.toml`:
+
+```toml
+[[hooks.post-add]]
+type = "copy"
+paths = [".env", "config/local.json"]
+
+[[hooks.post-add]]
+type = "link"
+paths = ["node_modules"]
+
+[[hooks.post-add]]
+type = "shell"
+run = "npm install"
+on_error = "abort"
+```
+
+Each `[[hooks.post-add]]` entry defines a single operation executed in order:
+
+| Type | Fields | Description |
+|------|--------|-------------|
+| `copy` | `paths` | Copy files from repo root to worktree |
+| `link` | `paths` | Create symlinks from worktree to repo root |
+| `shell` | `run` | Execute a shell command in worktree directory |
+
+Each operation can have its own `on_error` setting: `"abort"` (stop on error), `"continue"` (silently continue), or `"warn"` (print warning and continue, default). Note that even if a hook aborts, the worktree itself remains created.
+
+This is useful for:
+- Copying environment files (`.env`) that shouldn't be tracked in git
+- Sharing `node_modules` across worktrees to save disk space and install time
+- Running setup commands like `npm install` or `go mod download`
 
 ## 🗂️ Worktree Layout (`.wtm/`)
 

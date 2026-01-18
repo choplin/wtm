@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -10,15 +11,17 @@ import (
 	toml "github.com/pelletier/go-toml/v2"
 )
 
-// HooksConfig contains all hook configurations
-type HooksConfig struct {
-	PostAdd *HookConfig `toml:"post-add"`
+// HookOperation defines a single hook operation
+type HookOperation struct {
+	Type    string   `toml:"type"`     // "copy" | "link" | "shell"
+	Paths   []string `toml:"paths"`    // for copy/link
+	Run     string   `toml:"run"`      // for shell
+	OnError string   `toml:"on_error"` // "abort" | "continue" | "warn" (default)
 }
 
-// HookConfig defines configuration for a single hook
-type HookConfig struct {
-	Commands []string `toml:"commands"`
-	OnError  string   `toml:"on_error"` // "abort" | "continue" | "warn" (default)
+// HooksConfig contains all hook configurations
+type HooksConfig struct {
+	PostAdd []*HookOperation `toml:"post-add"`
 }
 
 // ProjectConfig represents project-specific configuration stored in .git/wtm/config.toml
@@ -26,47 +29,144 @@ type ProjectConfig struct {
 	Hooks HooksConfig `toml:"hooks"`
 }
 
-// HookRunner executes hook commands
+// HookRunner executes hook operations
 type HookRunner struct {
-	config *HookConfig
+	operations []*HookOperation
+	repoRoot   string
 }
 
-// NewHookRunner creates a new HookRunner with the given configuration
-func NewHookRunner(config *HookConfig) *HookRunner {
-	return &HookRunner{config: config}
+// NewHookRunner creates a new HookRunner with the given operations
+func NewHookRunner(operations []*HookOperation, repoRoot string) *HookRunner {
+	return &HookRunner{operations: operations, repoRoot: repoRoot}
 }
 
-// Run executes all hook commands in the specified working directory
+// Run executes all hook operations in the specified working directory
 func (h *HookRunner) Run(worktreePath string) error {
-	if h.config == nil || len(h.config.Commands) == 0 {
+	if len(h.operations) == 0 {
 		return nil
 	}
 
-	onError := strings.ToLower(strings.TrimSpace(h.config.OnError))
-	if onError == "" {
-		onError = "warn"
-	}
+	for _, op := range h.operations {
+		onError := strings.ToLower(strings.TrimSpace(op.OnError))
+		if onError == "" {
+			onError = "warn"
+		}
 
-	for _, cmdStr := range h.config.Commands {
-		fmt.Printf("  Running: %s\n", cmdStr)
+		switch strings.ToLower(op.Type) {
+		case "copy":
+			for _, path := range op.Paths {
+				if err := h.copyFile(path, worktreePath); err != nil {
+					if handleErr := h.handleError("copy", path, err, onError); handleErr != nil {
+						return handleErr
+					}
+				}
+			}
+		case "link":
+			for _, path := range op.Paths {
+				if err := h.linkFile(path, worktreePath); err != nil {
+					if handleErr := h.handleError("link", path, err, onError); handleErr != nil {
+						return handleErr
+					}
+				}
+			}
+		case "shell":
+			if op.Run == "" {
+				continue
+			}
+			fmt.Printf("  Running: %s\n", op.Run)
 
-		cmd := exec.Command("sh", "-c", cmdStr)
-		cmd.Dir = worktreePath
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+			cmd := exec.Command("sh", "-c", op.Run)
+			cmd.Dir = worktreePath
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
 
-		if err := cmd.Run(); err != nil {
-			switch onError {
-			case "abort":
-				return fmt.Errorf("hook command failed: %s: %w", cmdStr, err)
-			case "continue":
-				// Silently continue
-			default: // "warn"
-				fmt.Fprintf(os.Stderr, "  Warning: hook command failed: %s: %v\n", cmdStr, err)
+			if err := cmd.Run(); err != nil {
+				if handleErr := h.handleError("shell", op.Run, err, onError); handleErr != nil {
+					return handleErr
+				}
 			}
 		}
 	}
 
+	return nil
+}
+
+// handleError handles errors based on the on_error setting
+func (h *HookRunner) handleError(operation, target string, err error, onError string) error {
+	switch onError {
+	case "abort":
+		return fmt.Errorf("hook %s failed: %s: %w", operation, target, err)
+	case "continue":
+		// Silently continue
+	default: // "warn"
+		fmt.Fprintf(os.Stderr, "  Warning: hook %s failed: %s: %v\n", operation, target, err)
+	}
+	return nil
+}
+
+// copyFile copies a file from repo root to worktree
+func (h *HookRunner) copyFile(relPath, worktreePath string) error {
+	src := filepath.Join(h.repoRoot, relPath)
+	dst := filepath.Join(worktreePath, relPath)
+
+	// Check if source exists
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return fmt.Errorf("source not found: %w", err)
+	}
+
+	// Create parent directory if needed
+	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	// Copy file
+	srcFile, err := os.Open(src) //nolint:gosec // Path is derived from config
+	if err != nil {
+		return fmt.Errorf("failed to open source: %w", err)
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, srcInfo.Mode())
+	if err != nil {
+		return fmt.Errorf("failed to create destination: %w", err)
+	}
+	defer dstFile.Close()
+
+	if _, err := io.Copy(dstFile, srcFile); err != nil {
+		return fmt.Errorf("failed to copy: %w", err)
+	}
+
+	fmt.Printf("  Copied: %s\n", relPath)
+	return nil
+}
+
+// linkFile creates a symlink from worktree to repo root
+func (h *HookRunner) linkFile(relPath, worktreePath string) error {
+	src := filepath.Join(h.repoRoot, relPath)
+	dst := filepath.Join(worktreePath, relPath)
+
+	// Check if source exists
+	if _, err := os.Stat(src); err != nil {
+		return fmt.Errorf("source not found: %w", err)
+	}
+
+	// Create parent directory if needed
+	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	// Create symlink (use absolute path for source)
+	absSrc, err := filepath.Abs(src)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path: %w", err)
+	}
+
+	if err := os.Symlink(absSrc, dst); err != nil {
+		return fmt.Errorf("failed to create symlink: %w", err)
+	}
+
+	fmt.Printf("  Linked: %s\n", relPath)
 	return nil
 }
 
@@ -96,16 +196,21 @@ func loadProjectConfig() (*ProjectConfig, error) {
 
 // runPostAddHook executes post-add hooks if configured
 func runPostAddHook(worktreePath string) error {
+	repoRoot, err := getRepoRoot()
+	if err != nil {
+		return err
+	}
+
 	config, err := loadProjectConfig()
 	if err != nil {
 		return err
 	}
 
-	if config == nil || config.Hooks.PostAdd == nil {
+	if config == nil || len(config.Hooks.PostAdd) == 0 {
 		return nil
 	}
 
 	fmt.Println("  Running post-add hooks...")
-	runner := NewHookRunner(config.Hooks.PostAdd)
+	runner := NewHookRunner(config.Hooks.PostAdd, repoRoot)
 	return runner.Run(worktreePath)
 }

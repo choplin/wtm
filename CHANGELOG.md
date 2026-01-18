@@ -1,6 +1,6 @@
 ---
 created: 2025-10-02
-updated: 2025-11-12
+updated: 2026-01-18
 ---
 
 # Changelog
@@ -11,6 +11,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+
+- Hook file operations: `copy` and `link` options for copying files or creating symlinks from repo root to worktree
+- Post-add hook support via `.git/wtm/config.toml` for running commands after worktree creation
+- Shell completion command (`wtm completion [bash|zsh|fish|powershell]`)
+- Dynamic worktree name completion for `show` and `remove` commands
+- Git subcommand support (`git wtm`) via `make install-git`
 
 ## [0.5.0] - 2025-11-12
 
