@@ -129,6 +129,15 @@ func AddWorktree(name, branch, checkout, base string) error {
 	if err := os.MkdirAll(worktreeBase, 0o750); err != nil {
 		return err
 	}
+
+	// Create .gitignore to exclude the entire .wtm directory from git tracking
+	gitignorePath := filepath.Join(worktreeBase, ".gitignore")
+	if _, err := os.Stat(gitignorePath); os.IsNotExist(err) {
+		if err := os.WriteFile(gitignorePath, []byte("*\n"), 0o644); err != nil {
+			return fmt.Errorf("failed to create .gitignore: %w", err)
+		}
+	}
+
 	worktreePath := filepath.Join(worktreeBase, name)
 
 	// Build git worktree add command

@@ -359,7 +359,7 @@ func TestProjectConfigPath(t *testing.T) {
 		t.Fatalf("failed to resolve tmpDir symlinks: %v", err)
 	}
 
-	expected := filepath.Join(resolvedTmpDir, ".git", "wtm", "config.toml")
+	expected := filepath.Join(resolvedTmpDir, ".wtm", "config.toml")
 	if path != expected {
 		t.Errorf("expected path %q, got %q", expected, path)
 	}
@@ -437,7 +437,7 @@ run = "echo done"
 
 			// Create config file if test requires it
 			if tt.configTOML != "" {
-				wtmDir := filepath.Join(tmpDir, ".git", "wtm")
+				wtmDir := filepath.Join(tmpDir, ".wtm")
 				if err := os.MkdirAll(wtmDir, 0o755); err != nil {
 					t.Fatal(err)
 				}

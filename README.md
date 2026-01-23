@@ -137,7 +137,7 @@ After setup, worktree names are auto-completed for `show` and `remove` commands.
 
 ### Configuration
 
-Edit the project configuration file (`.git/wtm/config.toml`):
+Edit the project configuration file (`.wtm/config.toml`):
 
 ```bash
 wtm config edit
@@ -175,7 +175,7 @@ The server exposes these tools over stdio:
 
 ## 🪝 Hooks
 
-Run commands and copy files automatically after creating a worktree. Create `.git/wtm/config.toml`:
+Run commands and copy files automatically after creating a worktree. Create `.wtm/config.toml`:
 
 ```toml
 [[hooks.post-add]]

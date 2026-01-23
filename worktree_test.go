@@ -132,7 +132,7 @@ func TestAddWorktree(t *testing.T) {
 				if wt.Branch != "feature-1" {
 					t.Errorf("Expected branch 'feature-1', got '%s'", wt.Branch)
 				}
-				expectedPath := filepath.Join(repoPath, ".git", "wtm", "worktrees", "feature-1")
+				expectedPath := filepath.Join(repoPath, ".wtm", "feature-1")
 				resolvedExpected, err := filepath.EvalSymlinks(expectedPath)
 				if err != nil {
 					t.Fatalf("EvalSymlinks failed for expected path: %v", err)
@@ -182,6 +182,17 @@ func TestAddWorktree(t *testing.T) {
 		err := AddWorktree("feature-1", "", "", "")
 		if err == nil {
 			t.Error("Expected error when adding duplicate worktree, got nil")
+		}
+	})
+
+	t.Run("gitignore is created in worktree base directory", func(t *testing.T) {
+		gitignorePath := filepath.Join(repoPath, ".wtm", ".gitignore")
+		content, err := os.ReadFile(gitignorePath)
+		if err != nil {
+			t.Fatalf("Failed to read .gitignore: %v", err)
+		}
+		if string(content) != "*\n" {
+			t.Errorf("Expected .gitignore content '*\\n', got %q", string(content))
 		}
 	})
 

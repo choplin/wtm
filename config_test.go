@@ -33,8 +33,8 @@ func TestResolveWorktreeBaseDefault(t *testing.T) {
 	}
 
 	rel := relativeToRepoRoot(t, base)
-	if rel != filepath.Clean(".git/wtm/worktrees") {
-		t.Fatalf("expected relative path '.git/wtm/worktrees', got %s", rel)
+	if rel != filepath.Clean(".wtm") {
+		t.Fatalf("expected relative path '.wtm', got %s", rel)
 	}
 }
 

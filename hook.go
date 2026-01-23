@@ -24,7 +24,7 @@ type HooksConfig struct {
 	PostAdd []*HookOperation `toml:"post-add"`
 }
 
-// ProjectConfig represents project-specific configuration stored in .git/wtm/config.toml
+// ProjectConfig represents project-specific configuration stored in .wtm/config.toml
 type ProjectConfig struct {
 	Hooks HooksConfig `toml:"hooks"`
 }
@@ -170,14 +170,14 @@ func (h *HookRunner) linkFile(relPath, worktreePath string) error {
 	return nil
 }
 
-// loadProjectConfig loads project-specific configuration from .git/wtm/config.toml
+// loadProjectConfig loads project-specific configuration from .wtm/config.toml
 func loadProjectConfig() (*ProjectConfig, error) {
 	repoRoot, err := getRepoRoot()
 	if err != nil {
 		return nil, err
 	}
 
-	configPath := filepath.Join(repoRoot, ".git", "wtm", "config.toml")
+	configPath := filepath.Join(repoRoot, ".wtm", "config.toml")
 	data, err := os.ReadFile(configPath) //nolint:gosec // Config file path is derived from git repository root
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -221,7 +221,7 @@ func projectConfigPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(repoRoot, ".git", "wtm", "config.toml"), nil
+	return filepath.Join(repoRoot, ".wtm", "config.toml"), nil
 }
 
 // EditConfig opens the project configuration file in the user's editor

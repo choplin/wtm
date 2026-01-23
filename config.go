@@ -22,7 +22,7 @@ var (
 )
 
 const (
-	defaultWorktreeRoot = ".git/wtm/worktrees"
+	defaultWorktreeRoot = ".wtm"
 	configFileEnv       = "WTM_CONFIG_FILE"
 )
 

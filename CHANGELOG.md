@@ -12,6 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Moved worktree storage from `.git/wtm/worktrees/` to `.wtm/` for simpler path structure
+- Moved project configuration from `.git/wtm/config.toml` to `.wtm/config.toml`
+
+### Added
+
+- Automatic `.gitignore` creation in `.wtm/` directory to exclude worktrees from git tracking
+
 ## [0.6.1] - 2026-01-18
 
 ### Fixed
@@ -24,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `wtm config edit` command to open project configuration in `$EDITOR`
 - Hook file operations: `copy` and `link` options for copying files or creating symlinks from repo root to worktree
-- Post-add hook support via `.git/wtm/config.toml` for running commands after worktree creation
+- Post-add hook support via `.wtm/config.toml` for running commands after worktree creation
 - Shell completion command (`wtm completion [bash|zsh|fish|powershell]`)
 - Dynamic worktree name completion for `show` and `remove` commands
 - Git subcommand support (`git wtm`) via `make install-git`
