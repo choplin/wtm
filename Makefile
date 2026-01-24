@@ -8,22 +8,22 @@ endif
 .PHONY: build run test clean version lint fmt install install-git
 
 build:
-	go build -ldflags "$(LDFLAGS)" -o wtm .
+	go build -ldflags "$(LDFLAGS)" -o bin/wtm ./cmd/wtm
 
 run:
-	go run -ldflags "$(LDFLAGS)" .
+	go run -ldflags "$(LDFLAGS)" ./cmd/wtm
 
 test:
 	go test ./...
 
 install:
-	go build -ldflags "$(LDFLAGS)" -o $(GOBIN)/wtm .
+	go build -ldflags "$(LDFLAGS)" -o $(GOBIN)/wtm ./cmd/wtm
 
 install-git:
-	go build -ldflags "$(LDFLAGS)" -o $(GOBIN)/git-wtm .
+	go build -ldflags "$(LDFLAGS)" -o $(GOBIN)/git-wtm ./cmd/wtm
 
 clean:
-	rm -f wtm git-wtm
+	rm -rf bin
 
 version:
 	@echo $(VERSION)

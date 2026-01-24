@@ -1,4 +1,4 @@
-package main
+package wtm
 
 import (
 	"context"
@@ -59,7 +59,7 @@ func handleAddWorktree(_ context.Context, _ *mcp.CallToolRequest, input AddWorkt
 	}
 
 	// Get the created worktree info
-	worktrees, err := getWorktrees()
+	worktrees, err := GetWorktrees()
 	if err != nil {
 		return nil, AddWorktreeOutput{}, fmt.Errorf("failed to get worktree info: %w", err)
 	}
@@ -78,7 +78,7 @@ func handleAddWorktree(_ context.Context, _ *mcp.CallToolRequest, input AddWorkt
 }
 
 func handleListWorktrees(_ context.Context, _ *mcp.CallToolRequest, _ ListWorktreesInput) (*mcp.CallToolResult, ListWorktreesOutput, error) {
-	worktrees, err := getWorktrees()
+	worktrees, err := GetWorktrees()
 	if err != nil {
 		return nil, ListWorktreesOutput{}, fmt.Errorf("failed to list worktrees: %w", err)
 	}
@@ -87,7 +87,7 @@ func handleListWorktrees(_ context.Context, _ *mcp.CallToolRequest, _ ListWorktr
 }
 
 func handleShowWorktree(_ context.Context, _ *mcp.CallToolRequest, input ShowWorktreeInput) (*mcp.CallToolResult, ShowWorktreeOutput, error) {
-	worktrees, err := getWorktrees()
+	worktrees, err := GetWorktrees()
 	if err != nil {
 		return nil, ShowWorktreeOutput{}, fmt.Errorf("failed to get worktrees: %w", err)
 	}
@@ -138,15 +138,15 @@ func handleRemoveWorktree(_ context.Context, _ *mcp.CallToolRequest, input Remov
 }
 
 // StartMCPServer starts the MCP server over stdio transport
-func StartMCPServer(ctx context.Context) error {
-	server := newMCPServer()
+func StartMCPServer(ctx context.Context, version string) error {
+	server := newMCPServer(version)
 
 	// Run server over stdio transport
 	transport := &mcp.StdioTransport{}
 	return server.Run(ctx, transport)
 }
 
-func newMCPServer() *mcp.Server {
+func newMCPServer(version string) *mcp.Server {
 	server := mcp.NewServer(&mcp.Implementation{
 		Name:    "wtm",
 		Version: version,

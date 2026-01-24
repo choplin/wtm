@@ -6,7 +6,8 @@ before:
     - go test -v
 
 builds:
-  - env:
+  - main: ./cmd/wtm
+    env:
       - CGO_ENABLED=0
     goos:
       - linux

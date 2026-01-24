@@ -1,4 +1,4 @@
-package main
+package wtm
 
 import (
 	"context"
@@ -13,7 +13,7 @@ func TestMCPToolsListInMemory(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	server := newMCPServer()
+	server := newMCPServer("dev")
 	serverTransport, clientTransport := mcp.NewInMemoryTransports()
 
 	serverSession, err := server.Connect(ctx, serverTransport, nil)

@@ -1,5 +1,5 @@
-// Package main implements wtm (worktree manager), a CLI tool for managing Git worktrees.
-package main
+// Package wtm implements worktree manager, a CLI tool for managing Git worktrees.
+package wtm
 
 import (
 	"errors"

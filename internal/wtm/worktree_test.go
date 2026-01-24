@@ -1,4 +1,4 @@
-package main
+package wtm
 
 import (
 	"io"
@@ -120,9 +120,9 @@ func TestAddWorktree(t *testing.T) {
 		}
 
 		// Verify worktree was created
-		worktrees, err := getWorktrees()
+		worktrees, err := GetWorktrees()
 		if err != nil {
-			t.Fatalf("getWorktrees failed: %v", err)
+			t.Fatalf("GetWorktrees failed: %v", err)
 		}
 
 		found := false
@@ -158,9 +158,9 @@ func TestAddWorktree(t *testing.T) {
 			t.Errorf("AddWorktree failed: %v", err)
 		}
 
-		worktrees, err := getWorktrees()
+		worktrees, err := GetWorktrees()
 		if err != nil {
-			t.Errorf("getWorktrees failed: %v", err)
+			t.Errorf("GetWorktrees failed: %v", err)
 		}
 
 		found := false
@@ -209,9 +209,9 @@ func TestAddWorktree(t *testing.T) {
 		}
 
 		// Verify worktree was created with branch name
-		worktrees, err := getWorktrees()
+		worktrees, err := GetWorktrees()
 		if err != nil {
-			t.Fatalf("getWorktrees failed: %v", err)
+			t.Fatalf("GetWorktrees failed: %v", err)
 		}
 
 		found := false
@@ -242,9 +242,9 @@ func TestAddWorktree(t *testing.T) {
 		}
 
 		// Verify worktree was created with slash replaced by hyphen
-		worktrees, err := getWorktrees()
+		worktrees, err := GetWorktrees()
 		if err != nil {
-			t.Fatalf("getWorktrees failed: %v", err)
+			t.Fatalf("GetWorktrees failed: %v", err)
 		}
 
 		found := false
@@ -275,9 +275,9 @@ func TestAddWorktree(t *testing.T) {
 		}
 
 		// Verify worktree was created with custom name
-		worktrees, err := getWorktrees()
+		worktrees, err := GetWorktrees()
 		if err != nil {
-			t.Fatalf("getWorktrees failed: %v", err)
+			t.Fatalf("GetWorktrees failed: %v", err)
 		}
 
 		found := false
@@ -502,9 +502,9 @@ func TestRemoveWorktree(t *testing.T) {
 		}
 
 		// Verify worktree was removed
-		worktrees, err := getWorktrees()
+		worktrees, err := GetWorktrees()
 		if err != nil {
-			t.Errorf("getWorktrees failed: %v", err)
+			t.Errorf("GetWorktrees failed: %v", err)
 		}
 
 		for _, wt := range worktrees {
@@ -541,9 +541,9 @@ func TestRemoveWorktree(t *testing.T) {
 			t.Fatalf("AddWorktree failed: %v", err)
 		}
 
-		worktrees, err := getWorktrees()
+		worktrees, err := GetWorktrees()
 		if err != nil {
-			t.Fatalf("getWorktrees failed: %v", err)
+			t.Fatalf("GetWorktrees failed: %v", err)
 		}
 
 		var worktreePath string
@@ -595,9 +595,9 @@ func TestRemoveWorktree(t *testing.T) {
 			t.Fatalf("AddWorktree failed: %v", err)
 		}
 
-		worktrees, err := getWorktrees()
+		worktrees, err := GetWorktrees()
 		if err != nil {
-			t.Fatalf("getWorktrees failed: %v", err)
+			t.Fatalf("GetWorktrees failed: %v", err)
 		}
 
 		var worktreePath string
@@ -676,9 +676,9 @@ func TestGetWorktrees(t *testing.T) {
 	}
 
 	t.Run("get worktrees from empty repo", func(t *testing.T) {
-		worktrees, err := getWorktrees()
+		worktrees, err := GetWorktrees()
 		if err != nil {
-			t.Errorf("getWorktrees failed: %v", err)
+			t.Errorf("GetWorktrees failed: %v", err)
 		}
 
 		// Should have at least the main worktree
@@ -691,9 +691,9 @@ func TestGetWorktrees(t *testing.T) {
 		_ = AddWorktree("wt1", "", "", "")
 		_ = AddWorktree("wt2", "", "", "")
 
-		worktrees, err := getWorktrees()
+		worktrees, err := GetWorktrees()
 		if err != nil {
-			t.Errorf("getWorktrees failed: %v", err)
+			t.Errorf("GetWorktrees failed: %v", err)
 		}
 
 		// Should have main + 2 added worktrees

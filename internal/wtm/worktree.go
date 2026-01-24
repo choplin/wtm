@@ -1,4 +1,4 @@
-package main
+package wtm
 
 import (
 	"bufio"
@@ -111,7 +111,7 @@ func AddWorktree(name, branch, checkout, base string) error {
 	}
 
 	// Check if worktree already exists
-	worktrees, err := getWorktrees()
+	worktrees, err := GetWorktrees()
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func AddWorktree(name, branch, checkout, base string) error {
 	}
 
 	// Get the created worktree info for success message
-	worktrees, err = getWorktrees()
+	worktrees, err = GetWorktrees()
 	if err != nil {
 		return err
 	}
@@ -195,7 +195,7 @@ func AddWorktree(name, branch, checkout, base string) error {
 
 // ListWorktrees lists all worktrees
 func ListWorktrees(format string) error {
-	worktrees, err := getWorktrees()
+	worktrees, err := GetWorktrees()
 	if err != nil {
 		return err
 	}
@@ -225,7 +225,7 @@ func ListWorktrees(format string) error {
 
 // ShowWorktree shows detailed information about a worktree
 func ShowWorktree(name, format, field string) error {
-	worktrees, err := getWorktrees()
+	worktrees, err := GetWorktrees()
 	if err != nil {
 		return err
 	}
@@ -264,7 +264,7 @@ func ShowWorktree(name, format, field string) error {
 
 // RemoveWorktree removes a worktree and optionally deletes its branch
 func RemoveWorktree(name string, opts RemoveOptions) error {
-	worktrees, err := getWorktrees()
+	worktrees, err := GetWorktrees()
 	if err != nil {
 		return err
 	}
@@ -337,8 +337,8 @@ func RemoveWorktree(name string, opts RemoveOptions) error {
 	return nil
 }
 
-// getWorktrees retrieves all worktrees from git
-func getWorktrees() ([]Worktree, error) {
+// GetWorktrees retrieves all worktrees from git
+func GetWorktrees() ([]Worktree, error) {
 	output, err := runGitCommand("worktree", "list", "--porcelain")
 	if err != nil {
 		return nil, err

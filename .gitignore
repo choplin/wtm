@@ -1,5 +1,5 @@
-# Binaries
-wtm
+# Build output
+/bin/
 
 # Design documents (for reference only)
 WORKTREE_MANAGER_DESIGN.md

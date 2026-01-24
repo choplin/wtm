@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/choplin/wtm/internal/wtm"
 	"github.com/spf13/cobra"
 )
 
@@ -57,7 +58,7 @@ func newAddCmd() *cobra.Command {
 			if len(args) == 1 {
 				name = args[0]
 			}
-			if err := AddWorktree(name, branch, checkout, base); err != nil {
+			if err := wtm.AddWorktree(name, branch, checkout, base); err != nil {
 				return err
 			}
 			return nil
@@ -80,7 +81,7 @@ func newListCmd() *cobra.Command {
 		Aliases: []string{"ls"},
 		Args:    cobra.NoArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			if err := ListWorktrees(format); err != nil {
+			if err := wtm.ListWorktrees(format); err != nil {
 				return err
 			}
 			return nil
@@ -103,7 +104,7 @@ func newShowCmd() *cobra.Command {
 		ValidArgsFunction: completeWorktreeNames,
 		RunE: func(_ *cobra.Command, args []string) error {
 			name := args[0]
-			if err := ShowWorktree(name, format, field); err != nil {
+			if err := wtm.ShowWorktree(name, format, field); err != nil {
 				return err
 			}
 			return nil
@@ -134,15 +135,15 @@ func newRemoveCmd() *cobra.Command {
 				return fmt.Errorf("cannot combine --delete-branch and --delete-branch-force")
 			}
 
-			opts := RemoveOptions{Force: force}
+			opts := wtm.RemoveOptions{Force: force}
 			switch {
 			case deleteBranch:
-				opts.BranchDelete = BranchDeleteSafe
+				opts.BranchDelete = wtm.BranchDeleteSafe
 			case deleteBranchForce:
-				opts.BranchDelete = BranchDeleteForce
+				opts.BranchDelete = wtm.BranchDeleteForce
 			}
 
-			if err := RemoveWorktree(name, opts); err != nil {
+			if err := wtm.RemoveWorktree(name, opts); err != nil {
 				return err
 			}
 			return nil
@@ -175,7 +176,7 @@ func newMCPCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			ctx := context.Background()
-			if err := StartMCPServer(ctx); err != nil {
+			if err := wtm.StartMCPServer(ctx, version); err != nil {
 				return err
 			}
 			return nil
@@ -226,7 +227,7 @@ func newConfigEditCmd() *cobra.Command {
 		Short: "Edit project configuration in your editor",
 		Args:  cobra.NoArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return EditConfig()
+			return wtm.EditConfig()
 		},
 	}
 }
@@ -236,7 +237,7 @@ func completeWorktreeNames(_ *cobra.Command, args []string, _ string) ([]string,
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
 
-	worktrees, err := getWorktrees()
+	worktrees, err := wtm.GetWorktrees()
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveError
 	}
