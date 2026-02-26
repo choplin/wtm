@@ -175,7 +175,23 @@ The server exposes these tools over stdio:
 
 ## 🪝 Hooks
 
-Run commands and copy files automatically after creating a worktree. Create `.wtm/config.toml`:
+Run commands and copy files automatically after creating a worktree. Hooks can be defined at two levels:
+
+### Global Hooks
+
+Define hooks in `~/.config/wtm/config.toml` (or `$XDG_CONFIG_HOME/wtm/config.toml`) to apply to **all repositories**:
+
+```toml
+[[hooks.post-add]]
+type = "link"
+paths = ["node_modules", ".venv"]
+```
+
+For paths that may not exist in every repository (e.g., `node_modules`), set `on_error = "continue"` to skip silently.
+
+### Project Hooks
+
+Define hooks in `.wtm/config.toml` for **repository-specific** setup:
 
 ```toml
 [[hooks.post-add]]
@@ -183,14 +199,12 @@ type = "copy"
 paths = [".env", "config/local.json"]
 
 [[hooks.post-add]]
-type = "link"
-paths = ["node_modules"]
-
-[[hooks.post-add]]
 type = "shell"
 run = "npm install"
 on_error = "abort"
 ```
+
+### Hook Types
 
 Each `[[hooks.post-add]]` entry defines a single operation executed in order:
 
@@ -200,12 +214,14 @@ Each `[[hooks.post-add]]` entry defines a single operation executed in order:
 | `link` | `paths` | Create symlinks from worktree to repo root |
 | `shell` | `run` | Execute a shell command in worktree directory |
 
+When both global and project hooks are defined, global hooks run first, followed by project hooks.
+
 Each operation can have its own `on_error` setting: `"abort"` (stop on error), `"continue"` (silently continue), or `"warn"` (print warning and continue, default). Note that even if a hook aborts, the worktree itself remains created.
 
 This is useful for:
-- Copying environment files (`.env`) that shouldn't be tracked in git
-- Sharing `node_modules` across worktrees to save disk space and install time
-- Running setup commands like `npm install` or `go mod download`
+- Sharing `node_modules` or `.venv` across worktrees via symlinks (global)
+- Copying environment files (`.env`) that shouldn't be tracked in git (project)
+- Running setup commands like `npm install` or `go mod download` (project)
 
 ## 🗂️ Worktree Layout (`.wtm/`)
 

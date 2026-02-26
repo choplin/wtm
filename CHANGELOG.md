@@ -12,14 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Global hooks support: define hooks in `~/.config/wtm/config.toml` to apply across all repositories
+- Automatic `.gitignore` creation in `.wtm/` directory to exclude worktrees from git tracking
+
 ### Changed
 
 - Moved worktree storage from `.git/wtm/worktrees/` to `.wtm/` for simpler path structure
 - Moved project configuration from `.git/wtm/config.toml` to `.wtm/config.toml`
-
-### Added
-
-- Automatic `.gitignore` creation in `.wtm/` directory to exclude worktrees from git tracking
 
 ## [0.6.1] - 2026-01-18
 

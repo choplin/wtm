@@ -201,7 +201,7 @@ func runPostAddHook(worktreePath string) error {
 		return err
 	}
 
-	config, err := loadProjectConfig()
+	config, err := loadEffectiveProjectConfig()
 	if err != nil {
 		return err
 	}

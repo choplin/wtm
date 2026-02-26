@@ -302,6 +302,132 @@ func TestHookRunner_OperationOrder(t *testing.T) {
 	}
 }
 
+func TestRunPostAddHook_GlobalLinkMissingPath(t *testing.T) {
+	// Not parallel because we use os.Chdir
+
+	// Create a git repo (acts as both repo root and worktree target)
+	repoDir := t.TempDir()
+	cmd := exec.Command("git", "init")
+	cmd.Dir = repoDir
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("failed to init git repo: %v: %s", err, out)
+	}
+
+	// Global config with link to a path that does NOT exist in the repo
+	globalConfigFile := filepath.Join(t.TempDir(), "config.toml")
+	globalTOML := `[[hooks.post-add]]
+type = "link"
+paths = ["nonexistent_dir"]
+`
+	if err := os.WriteFile(globalConfigFile, []byte(globalTOML), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv(configFileEnv, globalConfigFile)
+
+	oldDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(repoDir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(oldDir); err != nil {
+			t.Logf("failed to restore directory: %v", err)
+		}
+	})
+
+	resetConfigCache()
+	t.Cleanup(resetConfigCache)
+
+	worktree := t.TempDir()
+
+	// on_error defaults to "warn" — prints warning but does not return error
+	err = runPostAddHook(worktree)
+	if err != nil {
+		t.Errorf("expected no error for global link with missing path (warn default), got: %v", err)
+	}
+
+	// Verify the symlink was NOT created
+	if _, err := os.Lstat(filepath.Join(worktree, "nonexistent_dir")); !os.IsNotExist(err) {
+		t.Error("expected nonexistent_dir to not be created")
+	}
+}
+
+func TestRunPostAddHook_GlobalLinkExistingPath(t *testing.T) {
+	// Not parallel because we use os.Chdir
+
+	// Create a git repo with a directory to link
+	repoDir := t.TempDir()
+	cmd := exec.Command("git", "init")
+	cmd.Dir = repoDir
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("failed to init git repo: %v: %s", err, out)
+	}
+
+	// Create the target directory in repo root
+	nodeModules := filepath.Join(repoDir, "node_modules")
+	if err := os.MkdirAll(filepath.Join(nodeModules, "pkg"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(nodeModules, "pkg", "index.js"), []byte("exports = {}"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Global config with link to existing path
+	globalConfigFile := filepath.Join(t.TempDir(), "config.toml")
+	globalTOML := `[[hooks.post-add]]
+type = "link"
+paths = ["node_modules"]
+`
+	if err := os.WriteFile(globalConfigFile, []byte(globalTOML), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv(configFileEnv, globalConfigFile)
+
+	oldDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(repoDir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(oldDir); err != nil {
+			t.Logf("failed to restore directory: %v", err)
+		}
+	})
+
+	resetConfigCache()
+	t.Cleanup(resetConfigCache)
+
+	worktree := t.TempDir()
+
+	err = runPostAddHook(worktree)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Verify symlink was created
+	linkPath := filepath.Join(worktree, "node_modules")
+	fi, err := os.Lstat(linkPath)
+	if err != nil {
+		t.Fatalf("failed to stat linked path: %v", err)
+	}
+	if fi.Mode()&os.ModeSymlink == 0 {
+		t.Error("expected node_modules to be a symlink")
+	}
+
+	// Verify content is accessible through symlink
+	content, err := os.ReadFile(filepath.Join(linkPath, "pkg", "index.js"))
+	if err != nil {
+		t.Fatalf("failed to read through symlink: %v", err)
+	}
+	if string(content) != "exports = {}" {
+		t.Errorf("unexpected content: %q", string(content))
+	}
+}
+
 func TestEditConfig_NoEditor(t *testing.T) {
 	t.Parallel()
 

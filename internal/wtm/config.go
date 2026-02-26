@@ -12,7 +12,8 @@ import (
 )
 
 type Config struct {
-	WorktreeRoot string `toml:"worktreeRoot"`
+	WorktreeRoot string      `toml:"worktreeRoot"`
+	Hooks        HooksConfig `toml:"hooks"`
 }
 
 var (
@@ -68,4 +69,35 @@ func resetConfigCache() {
 	configOnce = sync.Once{}
 	cachedConfig = Config{}
 	configErr = nil
+}
+
+// loadEffectiveProjectConfig loads and merges global + project hook configs.
+// Global hooks run first, followed by project hooks.
+// Returns nil if no hooks are configured at either level.
+func loadEffectiveProjectConfig() (*ProjectConfig, error) {
+	globalCfg, err := loadConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	projectCfg, err := loadProjectConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &ProjectConfig{}
+
+	// Global hooks first
+	merged.Hooks.PostAdd = append(merged.Hooks.PostAdd, globalCfg.Hooks.PostAdd...)
+
+	// Project hooks second
+	if projectCfg != nil {
+		merged.Hooks.PostAdd = append(merged.Hooks.PostAdd, projectCfg.Hooks.PostAdd...)
+	}
+
+	if len(merged.Hooks.PostAdd) == 0 {
+		return nil, nil
+	}
+
+	return merged, nil
 }
