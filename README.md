@@ -173,6 +173,28 @@ The server exposes these tools over stdio:
 }
 ```
 
+## 🔌 Claude Code Plugin
+
+wtm is also available as a [Claude Code plugin](https://code.claude.com/docs/en/plugins), providing a worktree management skill that Claude can invoke automatically.
+
+### Install
+
+1. Add the marketplace:
+
+```bash
+/plugin marketplace add choplin/wtm
+```
+
+2. Install and enable the plugin:
+
+```bash
+/plugin install wtm@wtm
+```
+
+Once enabled, Claude automatically recognizes worktree-related requests (e.g., "create a worktree", "list worktrees") and uses the `wtm` CLI to handle them.
+
+> **Note:** `wtm` must be available on your PATH for the plugin to work.
+
 ## 🪝 Hooks
 
 Run commands and copy files automatically after creating a worktree. Hooks can be defined at two levels:

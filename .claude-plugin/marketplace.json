@@ -1,0 +1,25 @@
+{
+  "name": "wtm",
+  "owner": {
+    "name": "choplin"
+  },
+  "metadata": {
+    "description": "Git worktree management plugin for Claude Code"
+  },
+  "plugins": [
+    {
+      "name": "wtm",
+      "source": "./",
+      "description": "Git worktree management with wtm CLI",
+      "version": "0.7.0",
+      "author": {
+        "name": "choplin"
+      },
+      "homepage": "https://github.com/choplin/wtm",
+      "repository": "https://github.com/choplin/wtm",
+      "license": "MIT",
+      "category": "development",
+      "tags": ["git", "worktree"]
+    }
+  ]
+}

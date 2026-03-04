@@ -1,0 +1,10 @@
+{
+  "name": "wtm",
+  "description": "Git worktree management with wtm CLI",
+  "author": {
+    "name": "choplin"
+  },
+  "repository": "https://github.com/choplin/wtm",
+  "license": "MIT",
+  "keywords": ["git", "worktree"]
+}

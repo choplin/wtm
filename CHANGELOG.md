@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Claude Code plugin support with worktree management skill
+
 ## [0.7.0] - 2026-02-26
 
 ### Added
