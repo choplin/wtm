@@ -5,7 +5,7 @@ ifeq ($(GOBIN),)
 GOBIN := $(shell go env GOPATH)/bin
 endif
 
-.PHONY: build run test clean version lint fmt install install-git
+.PHONY: build run test clean version lint fmt install install-git release-prep
 
 build:
 	go build -ldflags "$(LDFLAGS)" -o bin/wtm ./cmd/wtm
@@ -33,3 +33,10 @@ lint:
 
 fmt:
 	golangci-lint run --fix
+
+release-prep:
+ifndef RELEASE_VERSION
+	$(error RELEASE_VERSION is required. Usage: make release-prep RELEASE_VERSION=0.10.0)
+endif
+	@perl -pi -e 's/"version":\s*"[^"]*"/"version": "$(RELEASE_VERSION)"/' .claude-plugin/marketplace.json
+	@echo "Updated .claude-plugin/marketplace.json to $(RELEASE_VERSION)"

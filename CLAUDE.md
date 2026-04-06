@@ -16,7 +16,8 @@ Always run Go-related commands (`go test`, `go build`, `go run`) without overrid
 ## Release Procedure
 
 1. Ensure the working tree is clean and all tests pass (`go test ./...`).
-2. Update `CHANGELOG.md` with the new version section, release date, and comparison links.
-3. Commit the changelog update with an appropriate conventional commit message (e.g., `docs(changelog): prepare vX.Y.Z release`).
-4. Create the annotated release tag matching the new version (e.g., `git tag vX.Y.Z`).
-5. Push the main branch and the new tag (`git push origin main` and `git push origin vX.Y.Z`).
+2. Run `make release-prep RELEASE_VERSION=X.Y.Z` to update `.claude-plugin/marketplace.json`.
+3. Update `CHANGELOG.md` with the new version section, release date, and comparison links.
+4. Commit the release preparation with an appropriate conventional commit message (e.g., `docs(changelog): prepare vX.Y.Z release`).
+5. Create the annotated release tag matching the new version (e.g., `git tag vX.Y.Z`).
+6. Push the main branch and the new tag (`git push origin main` and `git push origin vX.Y.Z`).

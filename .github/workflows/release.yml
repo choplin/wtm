@@ -24,6 +24,15 @@ jobs:
         with:
           go-version: '1.24'
 
+      - name: Validate marketplace.json version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          MARKETPLACE_VERSION=$(jq -r '.plugins[0].version' .claude-plugin/marketplace.json)
+          if [ "$TAG_VERSION" != "$MARKETPLACE_VERSION" ]; then
+            echo "::error::marketplace.json version ($MARKETPLACE_VERSION) does not match tag ($TAG_VERSION)"
+            exit 1
+          fi
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
