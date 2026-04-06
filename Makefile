@@ -8,7 +8,7 @@ endif
 .PHONY: build run test clean version lint fmt install install-git release-prep
 
 build:
-	go build -ldflags "$(LDFLAGS)" -o bin/wtm ./cmd/wtm
+	go build -ldflags "$(LDFLAGS)" -o dist/wtm ./cmd/wtm
 
 run:
 	go run -ldflags "$(LDFLAGS)" ./cmd/wtm
@@ -23,7 +23,7 @@ install-git:
 	go build -ldflags "$(LDFLAGS)" -o $(GOBIN)/git-wtm ./cmd/wtm
 
 clean:
-	rm -rf bin
+	rm -rf dist
 
 version:
 	@echo $(VERSION)

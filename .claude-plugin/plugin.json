@@ -6,5 +6,6 @@
   },
   "repository": "https://github.com/choplin/wtm",
   "license": "MIT",
-  "keywords": ["git", "worktree"]
+  "keywords": ["git", "worktree"],
+  "hooks": "./hooks.json"
 }

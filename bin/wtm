@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Wrapper script for wtm.
+# Prefers a system-installed wtm (e.g. Homebrew) over the plugin-managed copy.
+set -euo pipefail
+
+SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Look for wtm on PATH, excluding this wrapper itself.
+find_system_wtm() {
+  local saved_IFS="$IFS"
+  IFS=':'
+  for dir in $PATH; do
+    [[ "$dir" == "$SELF_DIR" ]] && continue
+    if [[ -x "${dir}/wtm" ]]; then
+      IFS="$saved_IFS"
+      echo "${dir}/wtm"
+      return 0
+    fi
+  done
+  IFS="$saved_IFS"
+  return 1
+}
+
+if system_wtm="$(find_system_wtm)"; then
+  exec "$system_wtm" "$@"
+fi
+
+# Fall back to the plugin-managed binary.
+if [[ -n "${CLAUDE_PLUGIN_DATA:-}" && -x "${CLAUDE_PLUGIN_DATA}/bin/wtm" ]]; then
+  exec "${CLAUDE_PLUGIN_DATA}/bin/wtm" "$@"
+fi
+
+echo "wtm: binary not found. Install via Homebrew (brew install choplin/tap/wtm) or wait for the plugin SessionStart hook to download it." >&2
+exit 1
