@@ -113,49 +113,13 @@ wtm remove feature-auth -d        # Remove worktree and safely delete branch
 wtm remove feature-auth -D        # Remove worktree and force delete branch
 ```
 
-### wtm notes - Manage worktree notes
+### Notes
 
-Attach freeform text notes to worktrees.
+Worktrees can have freeform text notes. See the `wtm:notes` skill for full `wtm notes` command documentation.
 
-#### wtm notes add
-
-```bash
-wtm notes add <worktree> -m "message"
-wtm notes add <worktree>           # opens $EDITOR
-wtm notes add <worktree> -m "msg" -f  # overwrite existing note
-```
-
-#### wtm notes show
-
-```bash
-wtm notes show <worktree>
-```
-
-Prints the note to stdout. Errors if no note exists.
-
-#### wtm notes edit
-
-```bash
-wtm notes edit <worktree>
-```
-
-Opens the note in `$EDITOR`. Creates the file if it doesn't exist.
-
-#### wtm notes remove
-
-```bash
-wtm notes remove <worktree>
-```
-
-Deletes the note. Errors if no note exists.
-
-**Notes in show output:**
-```bash
-wtm show <worktree>          # note appears in pretty output
-wtm show <worktree> -f note  # outputs only the note
-```
-
-Notes are stored in `.git/worktrees/<name>/wtm-notes` (linked worktrees) or `.git/wtm-notes` (main worktree) and are automatically cleaned up when the worktree is removed.
+**Quick reference:**
+- Attach note at creation: `wtm add <name> -m "message"`
+- View note: `wtm show <name> -f note`
 
 ### wtm config edit - Edit project configuration
 
