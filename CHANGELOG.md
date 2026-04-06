@@ -12,6 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `wtm:notes` plugin skill for note-related operations, triggerable independently from the worktree skill
+
+### Changed
+
+- `wtm notes` subcommands (`add`, `show`, `edit`, `remove`) now default to the current worktree when no name is provided
+
+### Fixed
+
+- Release process now validates `marketplace.json` version matches the release tag
+
 ## [0.9.0] - 2026-04-06
 
 ### Added

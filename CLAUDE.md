@@ -9,6 +9,15 @@ When adding or changing features, always update both:
 
 This ensures documentation stays in sync with the codebase.
 
+### CHANGELOG update rules
+
+- `feat` and `fix` commits **must** include a CHANGELOG entry
+- `refactor`, `build`, `chore`, `test`, `docs` commits require an entry **only when they affect user-visible behavior**
+- Map commit types to Keep a Changelog sections:
+  - `feat` (new capability) → **Added**
+  - `feat` (change to existing behavior) → **Changed**
+  - `fix` → **Fixed**
+
 ## Go Commands
 
 Always run Go-related commands (`go test`, `go build`, `go run`) without overriding the default Go build cache. Do not set `GOCACHE` or other cache-related environment variables unless explicitly instructed.
