@@ -10,7 +10,7 @@
 
 - ⚡ Instant setup: one command spins up or removes worktrees—zero path or branch wrangling.
 - 🗂️ Hassle-free flow: wtm tracks everything so you never have to manage folder paths or branch names by hand.
-- 🤖 AI-ready workflows: the MCP server gives assistants safe access without ceding control.
+- 🤖 AI-ready workflows: Agent Skills give assistants safe access without ceding control.
 - 🛠️ Automation ready: structured output drops straight into your scripts and CI checks.
 
 ## 🚀 Quick Start
@@ -159,37 +159,6 @@ wtm config edit
 
 This opens the config file in your `$EDITOR`. If the file doesn't exist, it will be created.
 
-## 🤖 MCP Server (AI integration)
-
-Launch the MCP (Model Context Protocol) server to let AI agents manage worktrees:
-
-```bash
-wtm mcp
-```
-
-The server exposes these tools over stdio:
-
-- `wtm_add`: Create a new worktree.
-- `wtm_list`: List all worktrees.
-- `wtm_show`: Show worktree details.
-- `wtm_remove`: Remove a worktree.
-- `wtm_notes_add`: Add a note to a worktree.
-- `wtm_notes_show`: Show a worktree note.
-- `wtm_notes_remove`: Remove a worktree note.
-
-### Claude Code example
-
-```json
-{
-  "mcpServers": {
-    "wtm": {
-      "command": "wtm",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
 ## 🔌 Claude Code Plugin
 
 wtm is also available as a [Claude Code plugin](https://code.claude.com/docs/en/plugins), providing a worktree management skill that Claude can invoke automatically.
@@ -264,7 +233,7 @@ This is useful for:
 
 ## 🗂️ Worktree Layout (`.wtm/`)
 
-By default, `wtm` creates real Git worktrees under `.wtm/<worktree-name>`—whether you run the CLI directly or via the MCP server. Each directory is a standard Git worktree, so you can open it in an editor, run tests, or remove it with `wtm remove`. `wtm` itself remains stateless—Git stores all metadata—while the `.wtm/` folder simply keeps the worktree directories grouped in one place.
+By default, `wtm` creates real Git worktrees under `.wtm/<worktree-name>`—whether you run the CLI directly or via Agent Skills. Each directory is a standard Git worktree, so you can open it in an editor, run tests, or remove it with `wtm remove`. `wtm` itself remains stateless—Git stores all metadata—while the `.wtm/` folder simply keeps the worktree directories grouped in one place.
 
 ## 🧠 Design Principles
 

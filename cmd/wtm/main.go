@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 
@@ -38,7 +37,6 @@ func newRootCmd() *cobra.Command {
 		newNotesCmd(),
 		newConfigCmd(),
 		newVersionCmd(),
-		newMCPCmd(),
 		newCompletionCmd(),
 	)
 
@@ -255,21 +253,6 @@ func newVersionCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Run: func(_ *cobra.Command, _ []string) {
 			fmt.Printf("wtm version %s\n", version)
-		},
-	}
-}
-
-func newMCPCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "mcp",
-		Short: "Start MCP server",
-		Args:  cobra.NoArgs,
-		RunE: func(_ *cobra.Command, _ []string) error {
-			ctx := context.Background()
-			if err := wtm.StartMCPServer(ctx, version); err != nil {
-				return err
-			}
-			return nil
 		},
 	}
 }

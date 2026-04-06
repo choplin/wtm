@@ -16,8 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `wtm notes` command group for attaching freeform text notes to worktrees (`add`, `show`, `edit`, `remove`)
 - `-m/--message` flag on `wtm add` to attach a note at creation time
-- MCP tools for worktree notes: `wtm_notes_add`, `wtm_notes_show`, `wtm_notes_remove`
 - Notes are displayed in `wtm show` output and accessible via `wtm show <name> -f note`
+
+### Removed
+
+- MCP server and `wtm mcp` command. Use Agent Skills for AI integration instead.
 
 ## [0.8.0] - 2026-03-04
 
