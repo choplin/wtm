@@ -82,6 +82,7 @@ Options:
 - `-b, --branch <name>`: Create a new branch with the provided name.
 - `-B, --checkout <name>`: Use an existing branch.
 - `--base <branch>`: Set the base branch for a new branch (defaults to current HEAD).
+- `-m, --message <text>`: Attach a note to the worktree at creation time.
 
 ### List worktrees
 
@@ -100,7 +101,7 @@ wtm show api --field path
 wtm show api -f branch
 ```
 
-Available fields: `name`, `branch`, `path`, `head`, `created`.
+Available fields: `name`, `branch`, `path`, `head`, `created`, `note`.
 
 ### Remove a worktree
 
@@ -108,6 +109,19 @@ Available fields: `name`, `branch`, `path`, `head`, `created`.
 wtm remove feature-auth
 wtm remove feature-auth --force
 ```
+
+### Worktree notes
+
+Attach freeform text notes to worktrees for context, summaries, or descriptions:
+
+```bash
+wtm notes add feature-auth -m "Implementing OAuth2 login flow"
+wtm notes show feature-auth
+wtm notes edit feature-auth   # opens $EDITOR
+wtm notes remove feature-auth
+```
+
+Notes are stored inside Git's own management directories and are automatically cleaned up when the worktree is removed. They also appear in `wtm show` output.
 
 ### Version information
 
@@ -159,6 +173,9 @@ The server exposes these tools over stdio:
 - `wtm_list`: List all worktrees.
 - `wtm_show`: Show worktree details.
 - `wtm_remove`: Remove a worktree.
+- `wtm_notes_add`: Add a note to a worktree.
+- `wtm_notes_show`: Show a worktree note.
+- `wtm_notes_remove`: Remove a worktree note.
 
 ### Claude Code example
 

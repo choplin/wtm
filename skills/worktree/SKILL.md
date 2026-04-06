@@ -32,6 +32,7 @@ Creates a worktree under `.wtm/<name>`.
 - `-b, --branch <name>`: Create a new branch with the specified name
 - `-B, --checkout <name>`: Use an existing branch
 - `--base <branch>`: Set the base branch for a new branch (defaults to current HEAD)
+- `-m, --message <text>`: Attach a note to the worktree at creation time
 
 **Behavior:**
 - By default, creates both a worktree and a branch with the same `<name>`
@@ -76,7 +77,7 @@ wtm show <name> [flags]
 - `--format <format>`: Output format (`pretty` default, `json`)
 - `-f, --field <field>`: Output only a specific field
 
-**Available fields:** `name`, `branch`, `path`, `head`, `created`
+**Available fields:** `name`, `branch`, `path`, `head`, `created`, `note`
 
 **Examples:**
 ```bash
@@ -111,6 +112,50 @@ wtm remove feature-auth --force   # Skip confirmation
 wtm remove feature-auth -d        # Remove worktree and safely delete branch
 wtm remove feature-auth -D        # Remove worktree and force delete branch
 ```
+
+### wtm notes - Manage worktree notes
+
+Attach freeform text notes to worktrees.
+
+#### wtm notes add
+
+```bash
+wtm notes add <worktree> -m "message"
+wtm notes add <worktree>           # opens $EDITOR
+wtm notes add <worktree> -m "msg" -f  # overwrite existing note
+```
+
+#### wtm notes show
+
+```bash
+wtm notes show <worktree>
+```
+
+Prints the note to stdout. Errors if no note exists.
+
+#### wtm notes edit
+
+```bash
+wtm notes edit <worktree>
+```
+
+Opens the note in `$EDITOR`. Creates the file if it doesn't exist.
+
+#### wtm notes remove
+
+```bash
+wtm notes remove <worktree>
+```
+
+Deletes the note. Errors if no note exists.
+
+**Notes in show output:**
+```bash
+wtm show <worktree>          # note appears in pretty output
+wtm show <worktree> -f note  # outputs only the note
+```
+
+Notes are stored in `.git/worktrees/<name>/wtm-notes` (linked worktrees) or `.git/wtm-notes` (main worktree) and are automatically cleaned up when the worktree is removed.
 
 ### wtm config edit - Edit project configuration
 

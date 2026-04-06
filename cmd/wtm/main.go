@@ -35,6 +35,7 @@ func newRootCmd() *cobra.Command {
 		newListCmd(),
 		newShowCmd(),
 		newRemoveCmd(),
+		newNotesCmd(),
 		newConfigCmd(),
 		newVersionCmd(),
 		newMCPCmd(),
@@ -48,6 +49,7 @@ func newAddCmd() *cobra.Command {
 	var branch string
 	var checkout string
 	var base string
+	var message string
 
 	cmd := &cobra.Command{
 		Use:   "add [<name>]",
@@ -58,7 +60,7 @@ func newAddCmd() *cobra.Command {
 			if len(args) == 1 {
 				name = args[0]
 			}
-			if err := wtm.AddWorktree(name, branch, checkout, base); err != nil {
+			if err := wtm.AddWorktree(name, branch, checkout, base, message); err != nil {
 				return err
 			}
 			return nil
@@ -68,6 +70,7 @@ func newAddCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&branch, "branch", "b", "", "Create new branch with specified name")
 	cmd.Flags().StringVarP(&checkout, "checkout", "B", "", "Use existing branch")
 	cmd.Flags().StringVar(&base, "base", "", "Base branch for new branch")
+	cmd.Flags().StringVarP(&message, "message", "m", "", "Attach a note to the worktree")
 
 	return cmd
 }
@@ -156,6 +159,93 @@ func newRemoveCmd() *cobra.Command {
 	cmd.MarkFlagsMutuallyExclusive("delete-branch", "delete-branch-force")
 
 	return cmd
+}
+
+func newNotesCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "notes",
+		Short: "Manage worktree notes",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return cmd.Help()
+		},
+	}
+
+	cmd.AddCommand(
+		newNotesAddCmd(),
+		newNotesShowCmd(),
+		newNotesEditCmd(),
+		newNotesRemoveCmd(),
+	)
+
+	return cmd
+}
+
+func newNotesAddCmd() *cobra.Command {
+	var message string
+	var force bool
+
+	cmd := &cobra.Command{
+		Use:               "add <worktree>",
+		Short:             "Add a note to a worktree",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: completeWorktreeNames,
+		RunE: func(_ *cobra.Command, args []string) error {
+			name := args[0]
+			if message == "" {
+				return wtm.EditNote(name)
+			}
+			return wtm.AddNote(name, message, force)
+		},
+	}
+
+	cmd.Flags().StringVarP(&message, "message", "m", "", "Note message")
+	cmd.Flags().BoolVarP(&force, "force", "f", false, "Overwrite existing note")
+
+	return cmd
+}
+
+func newNotesShowCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:               "show <worktree>",
+		Short:             "Show a worktree note",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: completeWorktreeNames,
+		RunE: func(_ *cobra.Command, args []string) error {
+			note, err := wtm.GetNote(args[0])
+			if err != nil {
+				return err
+			}
+			if note == "" {
+				return fmt.Errorf("no note found for worktree '%s'", args[0])
+			}
+			fmt.Println(note)
+			return nil
+		},
+	}
+}
+
+func newNotesEditCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:               "edit <worktree>",
+		Short:             "Edit a worktree note in $EDITOR",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: completeWorktreeNames,
+		RunE: func(_ *cobra.Command, args []string) error {
+			return wtm.EditNote(args[0])
+		},
+	}
+}
+
+func newNotesRemoveCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:               "remove <worktree>",
+		Short:             "Remove a worktree note",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: completeWorktreeNames,
+		RunE: func(_ *cobra.Command, args []string) error {
+			return wtm.RemoveNote(args[0])
+		},
+	}
 }
 
 func newVersionCmd() *cobra.Command {

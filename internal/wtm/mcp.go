@@ -14,6 +14,7 @@ type AddWorktreeInput struct {
 	Branch   string `json:"branch,omitempty" jsonschema:"create new branch with this name (default: same as worktree name)"`
 	Checkout string `json:"checkout,omitempty" jsonschema:"use existing branch with this name"`
 	Base     string `json:"base,omitempty" jsonschema:"base branch for new branch (default: current HEAD)"`
+	Note     string `json:"note,omitempty" jsonschema:"attach a note to the worktree"`
 }
 
 type AddWorktreeOutput struct {
@@ -53,7 +54,7 @@ type RemoveWorktreeOutput struct {
 // Tool handlers
 
 func handleAddWorktree(_ context.Context, _ *mcp.CallToolRequest, input AddWorktreeInput) (*mcp.CallToolResult, AddWorktreeOutput, error) {
-	err := AddWorktree(input.Name, input.Branch, input.Checkout, input.Base)
+	err := AddWorktree(input.Name, input.Branch, input.Checkout, input.Base, input.Note)
 	if err != nil {
 		return nil, AddWorktreeOutput{}, fmt.Errorf("failed to add worktree: %w", err)
 	}
@@ -137,6 +138,63 @@ func handleRemoveWorktree(_ context.Context, _ *mcp.CallToolRequest, input Remov
 	}, nil
 }
 
+// Notes MCP tool structures
+
+type NotesAddInput struct {
+	Name    string `json:"name" jsonschema:"name of the worktree"`
+	Message string `json:"message" jsonschema:"note message"`
+	Force   bool   `json:"force,omitempty" jsonschema:"overwrite existing note"`
+}
+
+type NotesAddOutput struct {
+	Message string `json:"message" jsonschema:"result message"`
+}
+
+type NotesShowInput struct {
+	Name string `json:"name" jsonschema:"name of the worktree"`
+}
+
+type NotesShowOutput struct {
+	Note string `json:"note" jsonschema:"note content"`
+}
+
+type NotesRemoveInput struct {
+	Name string `json:"name" jsonschema:"name of the worktree"`
+}
+
+type NotesRemoveOutput struct {
+	Message string `json:"message" jsonschema:"result message"`
+}
+
+func handleNotesAdd(_ context.Context, _ *mcp.CallToolRequest, input NotesAddInput) (*mcp.CallToolResult, NotesAddOutput, error) {
+	if err := AddNote(input.Name, input.Message, input.Force); err != nil {
+		return nil, NotesAddOutput{}, fmt.Errorf("failed to add note: %w", err)
+	}
+	return nil, NotesAddOutput{
+		Message: fmt.Sprintf("Added note to worktree '%s'", input.Name),
+	}, nil
+}
+
+func handleNotesShow(_ context.Context, _ *mcp.CallToolRequest, input NotesShowInput) (*mcp.CallToolResult, NotesShowOutput, error) {
+	note, err := GetNote(input.Name)
+	if err != nil {
+		return nil, NotesShowOutput{}, fmt.Errorf("failed to get note: %w", err)
+	}
+	if note == "" {
+		return nil, NotesShowOutput{}, fmt.Errorf("no note found for worktree '%s'", input.Name)
+	}
+	return nil, NotesShowOutput{Note: note}, nil
+}
+
+func handleNotesRemove(_ context.Context, _ *mcp.CallToolRequest, input NotesRemoveInput) (*mcp.CallToolResult, NotesRemoveOutput, error) {
+	if err := RemoveNote(input.Name); err != nil {
+		return nil, NotesRemoveOutput{}, fmt.Errorf("failed to remove note: %w", err)
+	}
+	return nil, NotesRemoveOutput{
+		Message: fmt.Sprintf("Removed note from worktree '%s'", input.Name),
+	}, nil
+}
+
 // StartMCPServer starts the MCP server over stdio transport
 func StartMCPServer(ctx context.Context, version string) error {
 	server := newMCPServer(version)
@@ -171,6 +229,21 @@ func newMCPServer(version string) *mcp.Server {
 		Name:        "wtm_remove",
 		Description: "Remove a git worktree by name. Use force flag to skip confirmation. Optionally delete the associated branch.",
 	}, handleRemoveWorktree)
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "wtm_notes_add",
+		Description: "Add a note to a worktree. Use force to overwrite an existing note.",
+	}, handleNotesAdd)
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "wtm_notes_show",
+		Description: "Show the note attached to a worktree.",
+	}, handleNotesShow)
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "wtm_notes_remove",
+		Description: "Remove the note from a worktree.",
+	}, handleNotesRemove)
 
 	return server
 }

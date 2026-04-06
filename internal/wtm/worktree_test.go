@@ -114,7 +114,7 @@ func TestAddWorktree(t *testing.T) {
 	}
 
 	t.Run("add worktree with default branch name", func(t *testing.T) {
-		err := AddWorktree("feature-1", "", "", "")
+		err := AddWorktree("feature-1", "", "", "", "")
 		if err != nil {
 			t.Fatalf("AddWorktree failed: %v", err)
 		}
@@ -153,7 +153,7 @@ func TestAddWorktree(t *testing.T) {
 	})
 
 	t.Run("add worktree with custom branch name", func(t *testing.T) {
-		err := AddWorktree("api", "feature/api-refactoring", "", "")
+		err := AddWorktree("api", "feature/api-refactoring", "", "", "")
 		if err != nil {
 			t.Errorf("AddWorktree failed: %v", err)
 		}
@@ -179,7 +179,7 @@ func TestAddWorktree(t *testing.T) {
 	})
 
 	t.Run("add duplicate worktree should fail", func(t *testing.T) {
-		err := AddWorktree("feature-1", "", "", "")
+		err := AddWorktree("feature-1", "", "", "", "")
 		if err == nil {
 			t.Error("Expected error when adding duplicate worktree, got nil")
 		}
@@ -203,7 +203,7 @@ func TestAddWorktree(t *testing.T) {
 		}
 
 		// Add worktree without name, using -B
-		err := AddWorktree("", "", "test-branch", "")
+		err := AddWorktree("", "", "test-branch", "", "")
 		if err != nil {
 			t.Fatalf("AddWorktree failed: %v", err)
 		}
@@ -236,7 +236,7 @@ func TestAddWorktree(t *testing.T) {
 		}
 
 		// Add worktree without name, using -B
-		err := AddWorktree("", "", "feature/auth-fix", "")
+		err := AddWorktree("", "", "feature/auth-fix", "", "")
 		if err != nil {
 			t.Fatalf("AddWorktree failed: %v", err)
 		}
@@ -269,7 +269,7 @@ func TestAddWorktree(t *testing.T) {
 		}
 
 		// Add worktree with explicit name
-		err := AddWorktree("custom-name", "", "another-branch", "")
+		err := AddWorktree("custom-name", "", "another-branch", "", "")
 		if err != nil {
 			t.Fatalf("AddWorktree failed: %v", err)
 		}
@@ -296,7 +296,7 @@ func TestAddWorktree(t *testing.T) {
 	})
 
 	t.Run("add worktree without name and without -B should fail", func(t *testing.T) {
-		err := AddWorktree("", "", "", "")
+		err := AddWorktree("", "", "", "", "")
 		if err == nil {
 			t.Error("Expected error when adding worktree without name and without -B, got nil")
 		}
@@ -322,8 +322,8 @@ func TestListWorktrees(t *testing.T) {
 	}
 
 	// Create test worktrees
-	_ = AddWorktree("test-1", "", "", "")
-	_ = AddWorktree("test-2", "", "", "")
+	_ = AddWorktree("test-1", "", "", "", "")
+	_ = AddWorktree("test-2", "", "", "", "")
 
 	primaryName := filepath.Base(repoPath)
 	expected := primaryName + " (primary)"
@@ -443,7 +443,7 @@ func TestShowWorktree(t *testing.T) {
 	}
 
 	// Create test worktree
-	_ = AddWorktree("show-test", "", "", "")
+	_ = AddWorktree("show-test", "", "", "", "")
 
 	t.Run("show in pretty format", func(t *testing.T) {
 		err := ShowWorktree("show-test", "pretty", "")
@@ -492,7 +492,7 @@ func TestRemoveWorktree(t *testing.T) {
 	}
 
 	t.Run("remove worktree with force flag", func(t *testing.T) {
-		if err := AddWorktree("remove-test", "", "", ""); err != nil {
+		if err := AddWorktree("remove-test", "", "", "", ""); err != nil {
 			t.Fatalf("AddWorktree failed: %v", err)
 		}
 
@@ -516,7 +516,7 @@ func TestRemoveWorktree(t *testing.T) {
 
 	t.Run("remove worktree and delete branch safely", func(t *testing.T) {
 		const name = "remove-branch-safe"
-		if err := AddWorktree(name, "", "", ""); err != nil {
+		if err := AddWorktree(name, "", "", "", ""); err != nil {
 			t.Fatalf("AddWorktree failed: %v", err)
 		}
 
@@ -537,7 +537,7 @@ func TestRemoveWorktree(t *testing.T) {
 
 	t.Run("remove worktree with force branch deletion", func(t *testing.T) {
 		const name = "remove-branch-force"
-		if err := AddWorktree(name, "", "", ""); err != nil {
+		if err := AddWorktree(name, "", "", "", ""); err != nil {
 			t.Fatalf("AddWorktree failed: %v", err)
 		}
 
@@ -591,7 +591,7 @@ func TestRemoveWorktree(t *testing.T) {
 
 	t.Run("remove worktree safe branch deletion fails on unmerged branch", func(t *testing.T) {
 		const name = "remove-branch-safe-fail"
-		if err := AddWorktree(name, "", "", ""); err != nil {
+		if err := AddWorktree(name, "", "", "", ""); err != nil {
 			t.Fatalf("AddWorktree failed: %v", err)
 		}
 
@@ -688,8 +688,8 @@ func TestGetWorktrees(t *testing.T) {
 	})
 
 	t.Run("get worktrees after adding some", func(t *testing.T) {
-		_ = AddWorktree("wt1", "", "", "")
-		_ = AddWorktree("wt2", "", "", "")
+		_ = AddWorktree("wt1", "", "", "", "")
+		_ = AddWorktree("wt2", "", "", "", "")
 
 		worktrees, err := GetWorktrees()
 		if err != nil {

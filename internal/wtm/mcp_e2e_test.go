@@ -47,10 +47,13 @@ func TestMCPToolsListInMemory(t *testing.T) {
 	}
 
 	expectedDescriptions := map[string]string{
-		"wtm_add":    "Create a new git worktree. Worktree name is used as directory identifier, independent from branch name.",
-		"wtm_list":   "List all git worktrees in the current repository with their details.",
-		"wtm_remove": "Remove a git worktree by name. Use force flag to skip confirmation. Optionally delete the associated branch.",
-		"wtm_show":   "Show detailed information about a specific worktree by name.",
+		"wtm_add":          "Create a new git worktree. Worktree name is used as directory identifier, independent from branch name.",
+		"wtm_list":         "List all git worktrees in the current repository with their details.",
+		"wtm_remove":       "Remove a git worktree by name. Use force flag to skip confirmation. Optionally delete the associated branch.",
+		"wtm_show":         "Show detailed information about a specific worktree by name.",
+		"wtm_notes_add":    "Add a note to a worktree. Use force to overwrite an existing note.",
+		"wtm_notes_show":   "Show the note attached to a worktree.",
+		"wtm_notes_remove": "Remove the note from a worktree.",
 	}
 
 	if len(res.Tools) != len(expectedDescriptions) {
@@ -86,6 +89,16 @@ func TestMCPToolsListInMemory(t *testing.T) {
 		case "wtm_show":
 			assertSchemaPropertyDescription(t, tool.InputSchema, "name", "name of the worktree to show")
 			assertSchemaPropertyDescription(t, tool.OutputSchema, "worktree", "worktree details")
+		case "wtm_notes_add":
+			assertSchemaPropertyDescription(t, tool.InputSchema, "name", "name of the worktree")
+			assertSchemaPropertyDescription(t, tool.InputSchema, "message", "note message")
+			assertSchemaPropertyDescription(t, tool.OutputSchema, "message", "result message")
+		case "wtm_notes_show":
+			assertSchemaPropertyDescription(t, tool.InputSchema, "name", "name of the worktree")
+			assertSchemaPropertyDescription(t, tool.OutputSchema, "note", "note content")
+		case "wtm_notes_remove":
+			assertSchemaPropertyDescription(t, tool.InputSchema, "name", "name of the worktree")
+			assertSchemaPropertyDescription(t, tool.OutputSchema, "message", "result message")
 		}
 	}
 }

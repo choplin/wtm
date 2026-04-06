@@ -19,6 +19,7 @@ type Worktree struct {
 	Path    string    `json:"path"`
 	HEAD    string    `json:"head"`
 	Created time.Time `json:"created"`
+	Note    string    `json:"note,omitempty"`
 }
 
 // BranchDeleteMode indicates how to handle the associated branch once the worktree is removed
@@ -95,7 +96,7 @@ func getRepoRoot() (string, error) {
 }
 
 // AddWorktree creates a new worktree
-func AddWorktree(name, branch, checkout, base string) error {
+func AddWorktree(name, branch, checkout, base, note string) error {
 	// Validate we're in a git repository
 	if _, err := runGitCommand("rev-parse", "--git-dir"); err != nil {
 		return fmt.Errorf("not in a git repository")
@@ -180,6 +181,13 @@ func AddWorktree(name, branch, checkout, base string) error {
 			fmt.Printf("✓ Created worktree: %s\n", wt.Name)
 			fmt.Printf("  Branch: %s\n", wt.Branch)
 			fmt.Printf("  Path: %s\n", wt.Path)
+
+			if note != "" {
+				if err := AddNote(wt.Name, note, false); err != nil {
+					return err
+				}
+				fmt.Printf("  Note: %s\n", note)
+			}
 
 			// Run post-add hooks
 			if err := runPostAddHook(wt.Path); err != nil {
@@ -387,11 +395,16 @@ func GetWorktrees() ([]Worktree, error) {
 		worktrees = append(worktrees, current)
 	}
 
-	// Get creation time for each worktree
+	// Get creation time and note for each worktree
+	repoRoot, repoRootErr := getRepoRoot()
 	for i := range worktrees {
 		info, err := os.Stat(worktrees[i].Path)
 		if err == nil {
 			worktrees[i].Created = info.ModTime()
+		}
+		if repoRootErr == nil {
+			isMain := normalizePath(worktrees[i].Path) == normalizePath(repoRoot)
+			worktrees[i].Note = readNoteFile(repoRoot, worktrees[i].Name, isMain)
 		}
 	}
 
@@ -482,6 +495,9 @@ func printPrettyFormat(wt *Worktree) {
 	fmt.Printf("Path:     %s\n", wt.Path)
 	fmt.Printf("HEAD:     %s\n", wt.HEAD)
 	fmt.Printf("Created:  %s\n", wt.Created.Format("2006-01-02 15:04:05"))
+	if wt.Note != "" {
+		fmt.Printf("Note:     %s\n", wt.Note)
+	}
 }
 
 // printField prints a specific field of a worktree
@@ -497,6 +513,8 @@ func printField(wt *Worktree, field string) error {
 		fmt.Println(wt.HEAD)
 	case "created":
 		fmt.Println(wt.Created.Format(time.RFC3339))
+	case "note":
+		fmt.Println(wt.Note)
 	default:
 		return fmt.Errorf("unknown field: %s", field)
 	}
