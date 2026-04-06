@@ -8,6 +8,53 @@ import (
 	"testing"
 )
 
+func TestCurrentWorktreeName(t *testing.T) {
+	repoPath := setupTestRepo(t)
+	defer cleanupTestRepo(t, repoPath)
+
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get working directory: %v", err)
+	}
+	defer os.Chdir(originalDir)
+
+	t.Run("returns main worktree name when in main worktree", func(t *testing.T) {
+		if err := os.Chdir(repoPath); err != nil {
+			t.Fatalf("Failed to change to test repo: %v", err)
+		}
+		name, err := CurrentWorktreeName()
+		if err != nil {
+			t.Fatalf("CurrentWorktreeName failed: %v", err)
+		}
+		expected := filepath.Base(repoPath)
+		if name != expected {
+			t.Errorf("expected %q, got %q", expected, name)
+		}
+	})
+
+	t.Run("returns linked worktree name when in linked worktree", func(t *testing.T) {
+		if err := os.Chdir(repoPath); err != nil {
+			t.Fatalf("Failed to change to test repo: %v", err)
+		}
+		if err := AddWorktree("current-test-wt", "", "", "", ""); err != nil {
+			t.Fatalf("AddWorktree failed: %v", err)
+		}
+
+		wtPath := filepath.Join(repoPath, ".wtm", "current-test-wt")
+		if err := os.Chdir(wtPath); err != nil {
+			t.Fatalf("Failed to change to linked worktree: %v", err)
+		}
+
+		name, err := CurrentWorktreeName()
+		if err != nil {
+			t.Fatalf("CurrentWorktreeName failed: %v", err)
+		}
+		if name != "current-test-wt" {
+			t.Errorf("expected 'current-test-wt', got %q", name)
+		}
+	})
+}
+
 func TestNoteFilePath(t *testing.T) {
 	repoPath := setupTestRepo(t)
 	defer cleanupTestRepo(t, repoPath)

@@ -178,17 +178,28 @@ func newNotesCmd() *cobra.Command {
 	return cmd
 }
 
+// resolveWorktreeName returns the worktree name from args, or the current worktree if no args given.
+func resolveWorktreeName(args []string) (string, error) {
+	if len(args) > 0 {
+		return args[0], nil
+	}
+	return wtm.CurrentWorktreeName()
+}
+
 func newNotesAddCmd() *cobra.Command {
 	var message string
 	var force bool
 
 	cmd := &cobra.Command{
-		Use:               "add <worktree>",
-		Short:             "Add a note to a worktree",
-		Args:              cobra.ExactArgs(1),
+		Use:               "add [worktree]",
+		Short:             "Add a note to a worktree (defaults to current worktree)",
+		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: completeWorktreeNames,
 		RunE: func(_ *cobra.Command, args []string) error {
-			name := args[0]
+			name, err := resolveWorktreeName(args)
+			if err != nil {
+				return err
+			}
 			if message == "" {
 				return wtm.EditNote(name)
 			}
@@ -204,17 +215,21 @@ func newNotesAddCmd() *cobra.Command {
 
 func newNotesShowCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:               "show <worktree>",
-		Short:             "Show a worktree note",
-		Args:              cobra.ExactArgs(1),
+		Use:               "show [worktree]",
+		Short:             "Show a worktree note (defaults to current worktree)",
+		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: completeWorktreeNames,
 		RunE: func(_ *cobra.Command, args []string) error {
-			note, err := wtm.GetNote(args[0])
+			name, err := resolveWorktreeName(args)
+			if err != nil {
+				return err
+			}
+			note, err := wtm.GetNote(name)
 			if err != nil {
 				return err
 			}
 			if note == "" {
-				return fmt.Errorf("no note found for worktree '%s'", args[0])
+				return fmt.Errorf("no note found for worktree '%s'", name)
 			}
 			fmt.Println(note)
 			return nil
@@ -224,24 +239,32 @@ func newNotesShowCmd() *cobra.Command {
 
 func newNotesEditCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:               "edit <worktree>",
-		Short:             "Edit a worktree note in $EDITOR",
-		Args:              cobra.ExactArgs(1),
+		Use:               "edit [worktree]",
+		Short:             "Edit a worktree note in $EDITOR (defaults to current worktree)",
+		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: completeWorktreeNames,
 		RunE: func(_ *cobra.Command, args []string) error {
-			return wtm.EditNote(args[0])
+			name, err := resolveWorktreeName(args)
+			if err != nil {
+				return err
+			}
+			return wtm.EditNote(name)
 		},
 	}
 }
 
 func newNotesRemoveCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:               "remove <worktree>",
-		Short:             "Remove a worktree note",
-		Args:              cobra.ExactArgs(1),
+		Use:               "remove [worktree]",
+		Short:             "Remove a worktree note (defaults to current worktree)",
+		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: completeWorktreeNames,
 		RunE: func(_ *cobra.Command, args []string) error {
-			return wtm.RemoveNote(args[0])
+			name, err := resolveWorktreeName(args)
+			if err != nil {
+				return err
+			}
+			return wtm.RemoveNote(name)
 		},
 	}
 }

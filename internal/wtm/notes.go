@@ -10,6 +10,15 @@ import (
 
 const noteFileName = "wtm-notes"
 
+// CurrentWorktreeName returns the name of the worktree the user is currently in.
+func CurrentWorktreeName() (string, error) {
+	toplevel, err := runGitCommand("rev-parse", "--show-toplevel")
+	if err != nil {
+		return "", fmt.Errorf("not in a git worktree")
+	}
+	return filepath.Base(strings.TrimSpace(toplevel)), nil
+}
+
 // noteFilePath resolves the path to the note file for a given worktree name.
 // For linked worktrees: .git/worktrees/<name>/wtm-notes
 // For the main worktree: .git/wtm-notes
