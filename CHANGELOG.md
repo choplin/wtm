@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Skill names are now prefixed with `wtm-` (`wtm-worktree`, `wtm-notes`) to avoid collisions when skills are installed directly into `skills/` without the plugin namespace
+
 ## [0.10.0] - 2026-04-07
 
 ### Added

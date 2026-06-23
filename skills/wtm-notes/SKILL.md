@@ -1,5 +1,5 @@
 ---
-name: notes
+name: wtm-notes
 description: >
   Manage worktree notes using the wtm CLI. Triggers on: add note, show note, edit note,
   remove note, delete note, worktree note, worktree notes, annotate worktree, attach note,
@@ -46,7 +46,7 @@ Deletes the note. Errors if no note exists.
 
 ## Integration with other commands
 
-Notes can also be managed through worktree commands (see `wtm:worktree` skill):
+Notes can also be managed through worktree commands (see `wtm-worktree` skill):
 
 - Attach note at creation: `wtm add <name> -m "message"`
 - View note in worktree info: `wtm show <name>` (note appears in pretty output)

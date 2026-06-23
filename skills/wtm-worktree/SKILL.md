@@ -1,5 +1,5 @@
 ---
-name: worktree
+name: wtm-worktree
 description: >
   Manage Git worktrees using the wtm CLI. Triggers on: create worktree, add worktree,
   list worktrees, show worktree, remove worktree, delete worktree, switch worktree,
@@ -115,7 +115,7 @@ wtm remove feature-auth -D        # Remove worktree and force delete branch
 
 ### Notes
 
-Worktrees can have freeform text notes. See the `wtm:notes` skill for full `wtm notes` command documentation.
+Worktrees can have freeform text notes. See the `wtm-notes` skill for full `wtm notes` command documentation.
 
 **Quick reference:**
 - Attach note at creation: `wtm add <name> -m "message"`
