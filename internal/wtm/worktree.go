@@ -95,6 +95,23 @@ func getRepoRoot() (string, error) {
 	return repoRoot, nil
 }
 
+// validateWorktreeName checks that the name is safe to use as a directory name.
+func validateWorktreeName(name string) error {
+	if name == "" {
+		return fmt.Errorf("worktree name must not be empty")
+	}
+	if name == "." || name == ".." {
+		return fmt.Errorf("worktree name must not be '.' or '..'")
+	}
+	if name != filepath.Base(name) {
+		return fmt.Errorf("worktree name must not contain path separators")
+	}
+	if strings.Contains(name, "\x00") {
+		return fmt.Errorf("worktree name must not contain null bytes")
+	}
+	return nil
+}
+
 // AddWorktree creates a new worktree
 func AddWorktree(name, branch, checkout, base, note string) error {
 	// Validate we're in a git repository
@@ -109,6 +126,10 @@ func AddWorktree(name, branch, checkout, base, note string) error {
 		}
 		// Replace slashes with hyphens
 		name = strings.ReplaceAll(checkout, "/", "-")
+	}
+
+	if err := validateWorktreeName(name); err != nil {
+		return err
 	}
 
 	// Check if worktree already exists

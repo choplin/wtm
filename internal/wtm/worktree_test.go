@@ -98,6 +98,42 @@ func captureStdout(t *testing.T, fn func() error) (string, error) {
 	return string(output), fnErr
 }
 
+func TestValidateWorktreeName(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		wantErr string
+	}{
+		{name: "valid simple name", input: "feature-1", wantErr: ""},
+		{name: "valid with dots", input: "v1.0.0", wantErr: ""},
+		{name: "valid with hyphens and underscores", input: "my_work-tree", wantErr: ""},
+		{name: "empty string", input: "", wantErr: "must not be empty"},
+		{name: "dot only", input: ".", wantErr: "must not be '.' or '..'"},
+		{name: "double dot", input: "..", wantErr: "must not be '.' or '..'"},
+		{name: "contains forward slash", input: "foo/bar", wantErr: "must not contain path separators"},
+		{name: "path traversal", input: "foo/../bar", wantErr: "must not contain path separators"},
+		{name: "contains null byte", input: "foo\x00bar", wantErr: "must not contain null bytes"},
+		{name: "leading dot is ok", input: ".hidden", wantErr: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateWorktreeName(tt.input)
+			if tt.wantErr == "" {
+				if err != nil {
+					t.Errorf("validateWorktreeName(%q) = %v, want nil", tt.input, err)
+				}
+			} else {
+				if err == nil {
+					t.Errorf("validateWorktreeName(%q) = nil, want error containing %q", tt.input, tt.wantErr)
+				} else if !strings.Contains(err.Error(), tt.wantErr) {
+					t.Errorf("validateWorktreeName(%q) = %v, want error containing %q", tt.input, err, tt.wantErr)
+				}
+			}
+		})
+	}
+}
+
 func TestAddWorktree(t *testing.T) {
 	repoPath := setupTestRepo(t)
 	defer cleanupTestRepo(t, repoPath)
@@ -303,6 +339,26 @@ func TestAddWorktree(t *testing.T) {
 		expectedMsg := "worktree name is required when not using -B option"
 		if err != nil && !strings.Contains(err.Error(), expectedMsg) {
 			t.Errorf("Expected error message to contain '%s', got '%s'", expectedMsg, err.Error())
+		}
+	})
+
+	t.Run("add worktree with path separator should fail", func(t *testing.T) {
+		err := AddWorktree("foo/bar", "", "", "", "")
+		if err == nil {
+			t.Error("Expected error for name with path separator, got nil")
+		}
+		if err != nil && !strings.Contains(err.Error(), "path separators") {
+			t.Errorf("Expected path separator error, got: %s", err.Error())
+		}
+	})
+
+	t.Run("add worktree with dot-dot name should fail", func(t *testing.T) {
+		err := AddWorktree("..", "", "", "", "")
+		if err == nil {
+			t.Error("Expected error for '..' name, got nil")
+		}
+		if err != nil && !strings.Contains(err.Error(), "'.' or '..'") {
+			t.Errorf("Expected dot error, got: %s", err.Error())
 		}
 	})
 }

@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Validate worktree names on `wtm add`, rejecting empty names, `.`/`..`, path separators, and null bytes to prevent path traversal outside `.wtm/`
+
 ### Changed
 
 - Skill names are now prefixed with `wtm-` (`wtm-worktree`, `wtm-notes`) to avoid collisions when skills are installed directly into `skills/` without the plugin namespace
