@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Plugin auto-installs the `wtm` binary from GitHub Releases on session start, so plugin users no longer need to install it separately via Homebrew (a Homebrew-installed `wtm` is detected and preferred)
 - Validate worktree names on `wtm add`, rejecting empty names, `.`/`..`, path separators, and null bytes to prevent path traversal outside `.wtm/`
 
 ### Changed
