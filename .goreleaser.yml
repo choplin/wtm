@@ -45,6 +45,7 @@ changelog:
 
 brews:
   - name: wtm
+    directory: Formula
     repository:
       owner: choplin
       name: homebrew-tap
